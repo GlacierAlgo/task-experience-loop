@@ -1,0 +1,20 @@
+[project]
+name = "task-experience-loop"
+version = "0.1.0"
+description = "Task-Experience Loop: design decision asset manager for autonomous agent development"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.0",
+    "python-frontmatter>=1.0",
+]
+
+[project.scripts]
+tel = "tel.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tel"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
