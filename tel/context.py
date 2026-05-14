@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from tel import decisions, kanban
+from tel import decisions, kanban, patterns
 
 TEL_DIR = Path("/Users/yanghh/obs/tel")
 CONTEXT_PATH = TEL_DIR / "loop-context.md"
@@ -85,6 +85,13 @@ def assemble() -> str:
             sections.append(f"{i}. {task.title}")
     else:
         sections.append("(awaiting tasks)")
+    sections.append("")
+
+    all_patterns = patterns.query()
+    if all_patterns:
+        sections.append("## Reusable Patterns")
+        for p in sorted(all_patterns, key=lambda x: x.uses, reverse=True)[:10]:
+            sections.append(f"- **{p.slug}**: {p.situation[:60]} → {p.action[:60]}")
 
     return "\n".join(sections) + "\n"
 

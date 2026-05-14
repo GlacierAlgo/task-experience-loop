@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import click
 
-from tel import context, decisions, kanban
+from tel import context, decisions, kanban, patterns
 
 
 @click.group()
@@ -107,7 +107,8 @@ def status():
         click.echo("No active task")
 
     all_decisions = decisions.query(status="active")
-    click.echo(f"Decisions: {len(all_decisions)} active")
+    all_patterns = patterns.query()
+    click.echo(f"Decisions: {len(all_decisions)} active | Patterns: {len(all_patterns)}")
 
     board = kanban.list_all()
     click.echo(f"Backlog: {len(board['Backlog'])} | Done: {len(board['Done'])}")
@@ -203,6 +204,53 @@ def show_cmd(slug: str):
         click.echo("\nEvolution Trigger:")
         for t in d.evolution_trigger:
             click.echo(f"  - {t}")
+
+
+@cli.group()
+def pattern():
+    """Manage reusable practice patterns."""
+
+
+@pattern.command("add")
+@click.option("--slug", prompt="Slug (kebab-case)")
+@click.option("--situation", prompt="Situation (when does this apply?)")
+@click.option("--action", prompt="Action (what to do)")
+@click.option("--outcome", prompt="Outcome (what happened / why it works)")
+@click.option("--domain", default="", help="Optional domain tag")
+def pattern_add(slug, situation, action, outcome, domain):
+    """Record a reusable practice pattern."""
+    p = patterns.record(slug=slug, situation=situation, action=action, outcome=outcome, domain=domain)
+    click.echo(f"Recorded pattern: {p.filename}")
+
+
+@pattern.command("list")
+@click.option("--domain", default=None, help="Filter by domain")
+def pattern_list(domain):
+    """List all patterns."""
+    all_p = patterns.query(domain=domain)
+    if not all_p:
+        click.echo("No patterns yet.")
+        return
+    for p in all_p:
+        uses_tag = f" (used {p.uses}x)" if p.uses else ""
+        click.echo(f"  {p.slug}{uses_tag}")
+        click.echo(f"    {p.situation[:80]}")
+        click.echo()
+
+
+@pattern.command("search")
+@click.argument("keyword")
+def pattern_search(keyword):
+    """Search patterns by keyword."""
+    matches = patterns.search(keyword)
+    if not matches:
+        click.echo(f"No patterns matching '{keyword}'.")
+        return
+    for p in matches:
+        click.echo(f"  {p.slug}")
+        click.echo(f"    Situation: {p.situation[:80]}")
+        click.echo(f"    Action: {p.action[:80]}")
+        click.echo()
 
 
 def main():

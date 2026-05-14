@@ -84,6 +84,35 @@ Update `/Users/yanghh/obs/tel/kanban.md`:
 
 Keep titles concise — a task name, not a sentence describing what was done.
 
+## Patterns (reusable practices)
+
+Lighter than decisions. When you discover "doing X in situation Y works well", write to `/Users/yanghh/obs/tel/patterns/{slug}.md`:
+
+```markdown
+---
+domain: {domain}
+created: {YYYY-MM-DD}
+uses: 0
+---
+
+# {slug}
+
+## Situation
+{when does this apply}
+
+## Action
+{what to do}
+
+## Outcome
+{why it works}
+```
+
+**Decision vs Pattern**:
+- Decision = "we chose X over Y because Z" (constrains future choices)
+- Pattern = "when facing S, doing A works well" (reusable practice)
+
+When reusing a pattern, bump its `uses:` count.
+
 ## Autonomous Execution Rules
 
 - **Execute autonomously** when: the decision aligns with existing constraints or decisions
@@ -94,7 +123,9 @@ Keep titles concise — a task name, not a sentence describing what was done.
 
 ## After Completing Work
 
-Regenerate the context file:
+- Update `kanban.md`
+- If the work implies obvious follow-up tasks, add them to Backlog (not mandatory)
+- Regenerate:
 ```
 tel context
 ```
