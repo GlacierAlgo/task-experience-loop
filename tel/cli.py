@@ -146,5 +146,25 @@ def domains_cmd():
     click.echo(f"  {'total':15s} {len(all_d)}")
 
 
+@cli.command("search")
+@click.argument("keyword")
+def search_cmd(keyword: str):
+    """Search decisions by keyword (matches domain, choice, decision point, constraints)."""
+    keyword_lower = keyword.lower()
+    all_d = decisions.query(status="active")
+    matches = []
+    for d in all_d:
+        searchable = f"{d.domain} {d.choice} {d.decision_point} {' '.join(d.constraints)}".lower()
+        if keyword_lower in searchable:
+            matches.append(d)
+    if not matches:
+        click.echo(f"No decisions matching '{keyword}'.")
+        return
+    for d in matches:
+        click.echo(f"  [{d.domain}] {d.filename}")
+        click.echo(f"    {d.choice}")
+        click.echo()
+
+
 def main():
     cli()
