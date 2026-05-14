@@ -199,4 +199,60 @@ def related_to(task_title: str) -> list[Decision]:
         choice_words = set(d.choice.lower().replace("-", " ").replace("_", " ").split())
         if keywords & choice_words:
             results.append(d)
+            continue
+        point_words = set(d.decision_point.lower().replace("-", " ").replace("_", " ").split())
+        if len(keywords & point_words) >= 2:
+            results.append(d)
+    return results
+
+
+REQUIRED_SECTIONS = ("Decision Point", "Option Space", "Choice", "Constraints & Rationale", "Implications")
+VALID_DOMAINS = ("architecture", "interface", "data", "deployment", "frontend", "workflow", "research")
+
+
+def validate(path: Path) -> list[str]:
+    errors = []
+    try:
+        d = _load(path)
+    except Exception as e:
+        return [f"Parse error: {e}"]
+
+    if not d.domain:
+        errors.append("Missing domain in frontmatter")
+    elif d.domain not in VALID_DOMAINS:
+        errors.append(f"Invalid domain '{d.domain}', must be one of: {', '.join(VALID_DOMAINS)}")
+
+    if not d.decided:
+        errors.append("Missing decided date in frontmatter")
+
+    if not d.choice:
+        errors.append("Empty ## Choice section")
+
+    if not d.decision_point:
+        errors.append("Empty ## Decision Point section")
+
+    if not d.option_space:
+        errors.append("Empty ## Option Space section (need 2+ options)")
+    elif len(d.option_space) < 2:
+        errors.append(f"Option Space has only {len(d.option_space)} option (need 2+)")
+
+    if not d.constraints:
+        errors.append("Empty ## Constraints & Rationale section")
+
+    if not d.implications:
+        errors.append("Empty ## Implications section")
+
+    return errors
+
+
+def validate_all() -> dict[str, list[str]]:
+    if not DECISIONS_DIR.exists():
+        return {}
+    results = {}
+    for f in sorted(DECISIONS_DIR.iterdir()):
+        if not f.suffix == ".md":
+            continue
+        errors = validate(f)
+        if errors:
+            results[f.name] = errors
     return results

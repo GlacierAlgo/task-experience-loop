@@ -117,5 +117,21 @@ def next_cmd():
         click.echo(f"  {i}. {t.title}{suffix}")
 
 
+@cli.command("validate")
+def validate_cmd():
+    """Validate all decision files for format compliance."""
+    errors = decisions.validate_all()
+    if not errors:
+        total = len(decisions.query(status="active"))
+        click.echo(f"All {total} decisions pass validation.")
+        return
+
+    for filename, issues in errors.items():
+        click.echo(f"\n{filename}:")
+        for issue in issues:
+            click.echo(f"  - {issue}")
+    click.echo(f"\n{len(errors)} file(s) with issues.")
+
+
 def main():
     cli()
