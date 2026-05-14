@@ -11,11 +11,29 @@ cat /Users/yanghh/obs/tel/loop-context.md
 
 This gives you: active task, global constraints, relevant design decisions, and planned next steps.
 
-## During Work
+## When to Write a Decision
 
-### When you identify a design decision (architecture choice, interface design, constraint discovery, option rejection):
+A decision is worth recording ONLY if it passes this test:
 
-Write it directly to `/Users/yanghh/obs/tel/decisions/{domain}--{slug}.md` with this format:
+> "If a different agent starts a similar task 3 months from now, would this decision prevent it from making a wrong choice or re-evaluating an already-settled question?"
+
+**Record** (design assets that constrain future work):
+- A choice was made between 2+ viable alternatives (architecture, tool, format, pattern)
+- A constraint was discovered that wasn't obvious (performance ceiling, cost limit, API quirk)
+- An option was explicitly rejected with reasons (prevents future re-evaluation)
+- An interface contract was established (API shape, data format, naming convention)
+
+**Do NOT record**:
+- What was done in this session (that's kanban, not decisions)
+- How code was implemented (that's in the code itself)
+- Research findings without a decision (that's notes)
+- Anything that only applies to this one task and won't recur
+
+**Litmus test**: If removing this decision file would cause a future agent to make a worse choice, keep it. If not, don't write it.
+
+## Decision File Format
+
+Write to `/Users/yanghh/obs/tel/decisions/{domain}--{slug}.md`:
 
 ```markdown
 ---
@@ -24,46 +42,47 @@ decided: {YYYY-MM-DD}
 status: active
 ---
 
-# {choice title}
+# {choice title — what was chosen, not what was decided}
 
 ## Decision Point
-{what is being decided}
+{the question that was answered — framed as a reusable design question}
 
 ## Option Space
 - {option 1}
 - {option 2}
-- ...
+- {option 3}
 
 ## Choice
-{what was chosen}
+{the selected option}
 
 ## Constraints & Rationale
-- {why this choice, what constraints drove it}
+- {each constraint that drove this choice — these are the reusable insights}
 
 ## Implications
-- {what follows from this choice}
+- {what follows from this choice — concrete downstream effects}
 
 ## Evolution Trigger
-- {when to revisit this decision}
+- {specific measurable conditions that would invalidate this decision}
 ```
 
-### What to record (design assets only):
-- Architecture choices (deployment, storage, communication patterns)
-- Interface design (API contracts, data formats, naming conventions)
-- Constraint discovery (performance limits, cost boundaries, team capacity)
-- Option rejection (why NOT X — prevents re-evaluation)
-
-### What NOT to record:
-- Implementation details (how a function works)
-- Bug fixes
-- Temporary debugging info
+Domain must be one of: `architecture`, `interface`, `data`, `deployment`, `frontend`, `workflow`, `research`
 
 ## Task Management
 
-Update the kanban when tasks change state:
-- Add task: append `- {title}` under `## Backlog` in `/Users/yanghh/obs/tel/kanban.md`
-- Activate: move from Backlog to `## Active`
-- Complete: move to `## Done` with date suffix `| YYYY-MM-DD`
+Update `/Users/yanghh/obs/tel/kanban.md`:
+
+```
+## Backlog
+- {short task title}
+
+## Active
+- {short task title} | {optional brief context}
+
+## Done
+- {short task title} | {YYYY-MM-DD}
+```
+
+Titles under 40 chars. No full sentences. No descriptions — just the task name.
 
 ## Autonomous Execution Rules
 
@@ -75,9 +94,7 @@ Update the kanban when tasks change state:
 
 ## After Completing Work
 
-Regenerate the context file by running:
+Regenerate the context file:
 ```
-cd /Users/yanghh/Documents/code/quant/task-experience-loop && uv run tel context
+tel context
 ```
-
-This keeps loop-context.md current for the next session.
