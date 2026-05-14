@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from pathlib import Path
 
 from tel import decisions, kanban
@@ -7,6 +8,16 @@ from tel import decisions, kanban
 TEL_DIR = Path("/Users/yanghh/obs/tel")
 CONTEXT_PATH = TEL_DIR / "loop-context.md"
 CONSTRAINTS_PATH = TEL_DIR / "constraints.md"
+
+
+def _append_grouped(sections: list[str], items: list) -> None:
+    by_domain: dict[str, list] = defaultdict(list)
+    for d in items:
+        by_domain[d.domain].append(d)
+    for domain in sorted(by_domain.keys()):
+        sections.append(f"### {domain}")
+        for d in by_domain[domain]:
+            sections.append(f"- [{d.filename}](decisions/{d.filename}): {d.choice}")
 
 
 def assemble() -> str:
@@ -42,14 +53,14 @@ def assemble() -> str:
     all_active = decisions.query(status="active")
     if active:
         related = decisions.related_to(active.title)
-        if not related:
-            related = all_active[:5]
+        if related:
+            for d in related:
+                sections.append(f"- [{d.filename}](decisions/{d.filename}): {d.choice}")
+        else:
+            _append_grouped(sections, all_active)
     else:
-        related = all_active[:5]
-    if related:
-        for d in related:
-            sections.append(f"- [{d.filename}](decisions/{d.filename}): {d.choice}")
-    else:
+        _append_grouped(sections, all_active)
+    if not all_active:
         sections.append("(none yet)")
     sections.append("")
 
