@@ -62,8 +62,20 @@ def task_list():
 @click.option("--constraints", prompt="Constraints & rationale (comma-separated)")
 @click.option("--implications", prompt="Implications (comma-separated)")
 @click.option("--triggers", prompt="Evolution triggers (comma-separated, or empty)", default="")
-def decide(domain, slug, point, options, choice, constraints, implications, triggers):
+@click.option("--force", is_flag=True, help="Skip duplicate check")
+def decide(domain, slug, point, options, choice, constraints, implications, triggers, force):
     """Record a design decision."""
+    if not force:
+        existing = decisions.query(domain=domain)
+        for e in existing:
+            if e.slug == slug:
+                click.echo(f"Decision already exists: {e.filename}. Use --force to overwrite.")
+                return
+            overlap = set(choice.lower().split()) & set(e.choice.lower().split())
+            if len(overlap) >= 3:
+                click.echo(f"Similar decision exists: {e.filename} ({e.choice})")
+                click.echo("Use --force to create anyway, or update the existing one.")
+                return
     d = decisions.record(
         domain=domain,
         slug=slug,
