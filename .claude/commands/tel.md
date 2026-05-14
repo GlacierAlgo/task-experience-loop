@@ -82,7 +82,7 @@ Update `/Users/yanghh/obs/tel/kanban.md`:
 - {short task title} | {YYYY-MM-DD}
 ```
 
-Titles under 40 chars. No full sentences. No descriptions — just the task name.
+Keep titles concise — a task name, not a sentence describing what was done.
 
 ## Autonomous Execution Rules
 
