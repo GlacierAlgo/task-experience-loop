@@ -133,5 +133,18 @@ def validate_cmd():
     click.echo(f"\n{len(errors)} file(s) with issues.")
 
 
+@cli.command("domains")
+def domains_cmd():
+    """Show decision count per domain."""
+    from collections import Counter
+
+    all_d = decisions.query(status="active")
+    counts = Counter(d.domain for d in all_d)
+    for domain, count in counts.most_common():
+        click.echo(f"  {domain:15s} {count}")
+    click.echo(f"  {'─' * 20}")
+    click.echo(f"  {'total':15s} {len(all_d)}")
+
+
 def main():
     cli()
