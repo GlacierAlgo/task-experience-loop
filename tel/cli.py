@@ -166,5 +166,32 @@ def search_cmd(keyword: str):
         click.echo()
 
 
+@cli.command("show")
+@click.argument("slug")
+def show_cmd(slug: str):
+    """Show full details of a decision by slug."""
+    d = decisions.get(slug)
+    if not d:
+        click.echo(f"Decision not found: {slug}")
+        return
+    click.echo(f"# {d.choice}")
+    click.echo(f"Domain: {d.domain} | Decided: {d.decided} | Status: {d.status}")
+    click.echo(f"\nDecision Point: {d.decision_point}")
+    click.echo("\nOption Space:")
+    for opt in d.option_space:
+        click.echo(f"  - {opt}")
+    click.echo(f"\nChoice: {d.choice}")
+    click.echo("\nConstraints & Rationale:")
+    for c in d.constraints:
+        click.echo(f"  - {c}")
+    click.echo("\nImplications:")
+    for imp in d.implications:
+        click.echo(f"  - {imp}")
+    if d.evolution_trigger:
+        click.echo("\nEvolution Trigger:")
+        for t in d.evolution_trigger:
+            click.echo(f"  - {t}")
+
+
 def main():
     cli()
