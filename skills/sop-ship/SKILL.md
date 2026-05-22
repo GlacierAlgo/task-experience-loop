@@ -18,7 +18,7 @@ description: "Move a locally ready artifact into its target runtime and verify i
 - 从 TEL、项目脚本、docs、env 和现有部署记录推导发布方式。
 - 发布前识别本地未就绪、未提交关键变更、权限或凭据风险。
 - 发布后验证用户关心入口可达或 artifact 已发布。
-- 本地未就绪或运行失败时 transition 到 `diagnose`；部署方式未定时 transition 到 `propose`；发布目标只是远目标的一部分且工作面不清时 transition 到 `expand`。
+- 本地未就绪或运行失败时 transition 到 `diagnose`；部署方式未定时 transition 到 `propose`；发布目标只是远目标的一部分且工作面不清时 transition 到 `bootstrap`。
 
 ## 不需要做
 

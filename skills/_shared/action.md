@@ -17,7 +17,7 @@ description: "Shared norm for SOP skills. Treat each skill as an action norm wit
 
 不要穷举业务场景，不写固定交接格式，不写详细步骤。
 
-当用户给出的是远目标，而不是一个已经能落到具体动作的局部任务时，先把目标展开成缺口场，再选择局部 action。
+当用户给出的是远目标，而不是一个已经能落到具体动作的局部任务时，先用 `bootstrap` 把目标启动成缺口场，再选择局部 action。
 
 ## 上下文补齐
 
@@ -46,7 +46,7 @@ action 结束时只判断是否需要进入另一个 action：
 - 如果需要，下一个 action 是什么，为什么。
 - 如果不需要，为什么停止。
 
-如果当前 action 发现目标空间仍不可见、缺口无法归属或后续工作面不足以判断，transition 到 `expand`。`expand` 只显影工作面，不产出 roadmap、milestone 或固定任务清单。
+如果当前 action 发现目标空间仍不可见、缺口无法归属或后续工作面不足以判断，transition 到 `bootstrap`。`bootstrap` 启动远目标并显影工作面，不产出 roadmap、milestone 或固定任务清单。
 
 ## TEL 写入闸门
 

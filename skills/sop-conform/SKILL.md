@@ -18,7 +18,7 @@ description: "Align current state with a concrete reference or standard. Trigger
 - 明确当前状态、对齐范围、可接受差异和验证方式。
 - 消除范围内的可见或可测差距，并验证关键行为不回归。
 - 发现参考本身有问题时指出问题，不盲从参考。
-- 完成后判断是否需要 transition 到 `review`、`migrate`、`diagnose`、`propose` 或 `expand`。
+- 完成后判断是否需要 transition 到 `review`、`migrate`、`diagnose`、`propose` 或 `bootstrap`。
 
 ## 不需要做
 

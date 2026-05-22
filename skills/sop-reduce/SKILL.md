@@ -18,7 +18,7 @@ description: "Prove code, files, dependencies, or abstractions are unnecessary a
 - 用引用、入口、配置、CLI/API、数据消费者或 TEL 证据证明候选无用。
 - 区分 dead、vestigial 和 speculative；无法证明就保留。
 - 删除后验证行为不变量。
-- 发现需要结构迁移、职责重划或目标面重显影时 transition 到 `migrate`、`propose` 或 `expand`。
+- 发现需要结构迁移、职责重划或目标面重显影时 transition 到 `migrate`、`propose` 或 `bootstrap`。
 
 ## 不需要做
 

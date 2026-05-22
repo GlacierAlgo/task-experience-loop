@@ -17,7 +17,7 @@ description: "Turn a bounded vague goal into decision-dense context for autonomo
 - 明确目标、裁决原则、边界、验收标准和物理落脚点。
 - 优先用 TEL decisions、constraints、当前 repo 和已有对话消解选项。
 - 暴露仍需裁决的选项空间，并只在既有约束无法裁决时问用户。
-- 目标过远、工作面不可见或无法枚举主要缺口时 transition 到 `expand`。
+- 目标过远、工作面不可见或无法枚举主要缺口时 transition 到 `bootstrap`。
 - 产出足够后 transition 到具体执行 action。
 
 ## 不需要做

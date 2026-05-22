@@ -14,4 +14,4 @@ The install target for global Codex usage is:
 ```
 
 The current SOP skill set uses canonical hyphen-case names such as `sop-explore`,
-`sop-propose`, `sop-diagnose`, and `sop-expand`.
+`sop-propose`, `sop-diagnose`, and `sop-bootstrap`.

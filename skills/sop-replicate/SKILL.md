@@ -18,7 +18,7 @@ description: "Produce multiple uniform instances from a known template and targe
 - 保持所有实例格式一致。
 - 已有 schema 或自动校验时自主批量执行。
 - 记录失败目标和失败原因，不让单个失败污染整个批次。
-- 模板或 schema 未定时 transition 到 `propose`；目标语义转换时 transition 到 `migrate`；批量目标来自远目标且缺口未显影时 transition 到 `expand`。
+- 模板或 schema 未定时 transition 到 `propose`；目标语义转换时 transition 到 `migrate`；批量目标来自远目标且缺口未显影时 transition 到 `bootstrap`。
 
 ## 不需要做
 

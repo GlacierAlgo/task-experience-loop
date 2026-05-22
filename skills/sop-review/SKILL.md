@@ -18,7 +18,7 @@ description: "Assess a changeset, artifact, or system state against explicit cri
 - 用用户要求、TEL constraints、decisions、项目约定和证据支撑 findings。
 - 区分事实、风险、假设和个人偏好。
 - 按用户需要输出 verdict、问题盘点、风险清单或设计评审。
-- 发现需要修改时 transition 到 `diagnose`、`reduce`、`migrate`、`conform`、`propose` 或 `expand`。
+- 发现需要修改时 transition 到 `diagnose`、`reduce`、`migrate`、`conform`、`propose` 或 `bootstrap`。
 
 ## 不需要做
 
