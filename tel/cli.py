@@ -20,7 +20,8 @@ def task():
 def task_add(title: str):
     """Add a task to backlog."""
     kanban.add(title)
-    click.echo(f"Added: {title}")
+    click.echo(f"Added to {kanban.current_project()}: {title}")
+    context.regenerate()
 
 
 @task.command("activate")
@@ -28,7 +29,7 @@ def task_add(title: str):
 def task_activate(title: str):
     """Move a task to Active."""
     kanban.activate(title)
-    click.echo(f"Activated: {title}")
+    click.echo(f"Activated in {kanban.current_project()}: {title}")
     context.regenerate()
 
 
@@ -37,13 +38,15 @@ def task_activate(title: str):
 def task_done(title: str):
     """Mark a task as done."""
     kanban.complete(title)
-    click.echo(f"Completed: {title}")
+    click.echo(f"Completed in {kanban.current_project()}: {title}")
     context.regenerate()
 
 
 @task.command("list")
 def task_list():
     """Show all tasks."""
+    click.echo(f"Project: {kanban.current_project()}")
+    click.echo(f"Kanban: {kanban.kanban_path()}")
     board = kanban.list_all()
     for col, tasks in board.items():
         click.echo(f"\n## {col}")
@@ -94,12 +97,15 @@ def decide(domain, slug, point, options, choice, constraints, implications, trig
 def context_cmd():
     """Regenerate loop-context.md."""
     context.regenerate()
-    click.echo("Regenerated loop-context.md")
+    click.echo(f"Regenerated loop-context.md for {kanban.current_project()}")
 
 
 @cli.command("status")
 def status():
     """Show current loop status."""
+    click.echo(f"Project: {kanban.current_project()}")
+    click.echo(f"Kanban: {kanban.kanban_path()}")
+
     active = kanban.get_active()
     if active:
         click.echo(f"Active: {active.title}")

@@ -3,11 +3,15 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from tel import decisions, kanban, patterns
+from tel import decisions, kanban, patterns, project
 
-TEL_DIR = Path("/Users/yanghh/obs/tel")
-CONTEXT_PATH = TEL_DIR / "loop-context.md"
-CONSTRAINTS_PATH = TEL_DIR / "constraints.md"
+
+def _context_path() -> Path:
+    return project.tel_dir() / "loop-context.md"
+
+
+def _constraints_path() -> Path:
+    return project.tel_dir() / "constraints.md"
 
 
 def _append_grouped(sections: list[str], items: list) -> None:
@@ -20,14 +24,24 @@ def _append_grouped(sections: list[str], items: list) -> None:
             sections.append(f"- [{d.filename}](decisions/{d.filename}): {d.choice}")
 
 
-def assemble() -> str:
+def assemble(project_id: str | None = None) -> str:
+    current_project = project_id or project.current_project_id()
+    root = project.current_project_root()
+    board_path = kanban.kanban_path()
+
     sections = [
         "# Task-Experience Loop Context",
         "<!-- Auto-generated. Do not edit manually. Run `tel context` to regenerate. -->",
         "",
     ]
 
-    active = kanban.get_active()
+    sections.append("## Project Scope")
+    sections.append(f"- Project: `{current_project}`")
+    sections.append(f"- Root: `{root}`")
+    sections.append(f"- Kanban: `{board_path}`")
+    sections.append("")
+
+    active = kanban.get_active(current_project)
     sections.append("## Active Task")
     if active:
         line = active.title
@@ -39,8 +53,9 @@ def assemble() -> str:
     sections.append("")
 
     sections.append("## Global Constraints")
-    if CONSTRAINTS_PATH.exists():
-        for line in CONSTRAINTS_PATH.read_text().splitlines():
+    constraints_path = _constraints_path()
+    if constraints_path.exists():
+        for line in constraints_path.read_text().splitlines():
             if line.startswith("- "):
                 sections.append(line)
             elif line.startswith("## ") and "Global Constraints" not in line:
@@ -65,7 +80,7 @@ def assemble() -> str:
     sections.append("")
 
     sections.append("## Recent Completions")
-    board = kanban.list_all()
+    board = kanban.list_all(current_project)
     done = board.get("Done", [])
     recent = done[-3:] if len(done) > 3 else done
     if recent:
@@ -96,5 +111,5 @@ def assemble() -> str:
     return "\n".join(sections) + "\n"
 
 
-def regenerate():
-    CONTEXT_PATH.write_text(assemble())
+def regenerate(project_id: str | None = None):
+    _context_path().write_text(assemble(project_id))
