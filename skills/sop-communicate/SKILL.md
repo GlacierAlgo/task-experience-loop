@@ -14,6 +14,7 @@ description: "Use GitHub Issues as the communication surface between projects, m
 
 ## 需要做
 
+- 沟通说明文字中文优先；专业性字词、模块名、接口名、字段名和 GitHub/TEL/agent 等术语可以保留英文。
 - 先识别参与沟通的 repo、项目、模块、责任方和当前目标；从 Git remote、TEL、docs 和现有 issues 推导，不足时再问用户。
 - 优先读取相关 open issues、已关闭但仍有决策价值的 issues、项目文档和 TEL decisions，避免重复开 issue 或覆盖既有边界。
 - 写 issue 前先收束沟通意图：请求对方做什么、为什么需要、依赖哪个模块、完成后如何验证。
