@@ -18,6 +18,7 @@ description: "Use GitHub Issues as the communication surface between projects, m
 - 优先读取相关 open issues、已关闭但仍有决策价值的 issues、项目文档和 TEL decisions，避免重复开 issue 或覆盖既有边界。
 - 写 issue 前先收束沟通意图：请求对方做什么、为什么需要、依赖哪个模块、完成后如何验证。
 - issue 正文保持可执行：背景、模块边界、依赖关系、请求动作、验收口径、相关链接和当前阻塞。
+- 如果只是 Mac/Windows 两台本地机器之间的压缩信息点，而不是跨项目正式沟通，transition 到 `sop-handoff`。
 - 维护一个轻量沟通 artifact；如果项目已有同类文件则更新它，否则在当前项目中创建最窄的 Markdown artifact。
 - artifact 记录模块化项目、模块之间的关联性、分工边界、开放问题和对应 GitHub issue 链接。
 - 边界表达必须同时写清 ownership 和 non-ownership：谁拥有语义、生命周期、结果存储、索引/投影、稳定输入输出，谁明确不拥有这些责任。
@@ -34,6 +35,8 @@ description: "Use GitHub Issues as the communication surface between projects, m
 - `Open Issues`：待沟通问题、GitHub issue 链接和当前状态。
 - `Resolved Agreements`：已经确认但尚未值得写成 TEL decision 的工作约定。
 
+机器 handoff 是更轻的 artifact，由 `sop-handoff` 负责；它只写 `Context`、`Boundary`、`Action` 和 `References`，接收方自行决定是否写入本机 obs、TEL 或 kanban。
+
 ## 边界范式
 
 跨项目 issue 和 artifact 要偏向这种表达：
@@ -49,6 +52,7 @@ description: "Use GitHub Issues as the communication surface between projects, m
 - 不把 GitHub Issues 变成 TEL 的替代品；长期可复用边界仍进入 TEL decisions/patterns。
 - 不为模糊想法或内部临时思考开 issue。
 - 不把 issue 写成聊天记录；issue 必须能被另一个项目直接消费。
+- 不把 `machine-handoffs/` 变成 obs 镜像、聊天备份或长期决策库。
 - 不泄露 secrets、私有凭据、客户敏感数据或机器本地不可共享路径。
 - 不引入复杂同步协议、锁、数据库或跨项目任务平台。
 

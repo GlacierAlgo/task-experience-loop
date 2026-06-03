@@ -6,6 +6,7 @@ This repository contains:
 
 - `tel/`: CLI utilities for decisions, patterns, kanban, and generated loop context.
 - `skills/`: global Codex skill sources for action-oriented SOP skills.
+- `machine-handoffs/`: compressed Mac/Windows information packets for facts the other machine should see after `git pull`.
 
 Kanban tasks are scoped to the current project inside one canonical
 `/Users/yanghh/obs/tel/kanban.md` file. Under each `Backlog`, `Active`, and

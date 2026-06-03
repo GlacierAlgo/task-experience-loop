@@ -21,6 +21,7 @@ description: "Upload completed local code changes to the Git remote when a previ
 - push 当前分支到对应 remote；push 后报告 branch、remote 和 commit hash。
 - push 失败时先判断是凭据、远端落后、冲突、网络还是 hook 问题；可局部修复则修复并重试，根因不清时 transition 到 `diagnose`。
 - 如果任务完成需要 TEL 收口，先更新 kanban/context，再把 TEL 变更纳入同一个合理提交。
+- 如果 staged 范围包含 `machine-handoffs/`，确认 packet 短小、无敏感信息，并在结果里点明接收机器需要 `git pull` 查看。
 
 ## 不需要做
 
