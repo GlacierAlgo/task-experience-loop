@@ -6,7 +6,11 @@ from pathlib import Path
 
 import frontmatter
 
-PATTERNS_DIR = Path("/Users/yanghh/obs/tel/patterns")
+from tel import project
+
+
+def patterns_dir() -> Path:
+    return project.tel_dir() / "patterns"
 
 
 @dataclass
@@ -80,7 +84,8 @@ def _render(p: Pattern) -> str:
 
 
 def record(slug: str, situation: str, action: str, outcome: str, domain: str = "") -> Pattern:
-    PATTERNS_DIR.mkdir(parents=True, exist_ok=True)
+    directory = patterns_dir()
+    directory.mkdir(parents=True, exist_ok=True)
     p = Pattern(
         slug=slug,
         situation=situation,
@@ -89,13 +94,13 @@ def record(slug: str, situation: str, action: str, outcome: str, domain: str = "
         domain=domain,
         created=date.today().isoformat(),
     )
-    path = PATTERNS_DIR / p.filename
+    path = directory / p.filename
     path.write_text(_render(p))
     return p
 
 
 def bump_use(slug: str):
-    path = PATTERNS_DIR / f"{slug}.md"
+    path = patterns_dir() / f"{slug}.md"
     if not path.exists():
         return
     p = _load(path)
@@ -104,10 +109,11 @@ def bump_use(slug: str):
 
 
 def query(domain: str | None = None) -> list[Pattern]:
-    if not PATTERNS_DIR.exists():
+    directory = patterns_dir()
+    if not directory.exists():
         return []
     results = []
-    for f in sorted(PATTERNS_DIR.iterdir()):
+    for f in sorted(directory.iterdir()):
         if not f.suffix == ".md":
             continue
         p = _load(f)

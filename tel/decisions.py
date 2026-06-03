@@ -6,8 +6,15 @@ from pathlib import Path
 
 import frontmatter
 
-DECISIONS_DIR = Path("/Users/yanghh/obs/tel/decisions")
-ARCHIVE_DIR = Path("/Users/yanghh/obs/tel/archive")
+from tel import project
+
+
+def decisions_dir() -> Path:
+    return project.tel_dir() / "decisions"
+
+
+def archive_dir() -> Path:
+    return project.tel_dir() / "archive"
 
 
 @dataclass
@@ -33,7 +40,10 @@ class Decision:
 
 
 def _decision_path(slug: str) -> Path | None:
-    for f in DECISIONS_DIR.iterdir():
+    directory = decisions_dir()
+    if not directory.exists():
+        return None
+    for f in directory.iterdir():
         if f.stem.endswith(f"--{slug}") or f.stem == slug:
             return f
     return None
@@ -136,7 +146,8 @@ def record(
     implications: list[str],
     evolution_trigger: list[str] | None = None,
 ) -> Decision:
-    DECISIONS_DIR.mkdir(parents=True, exist_ok=True)
+    directory = decisions_dir()
+    directory.mkdir(parents=True, exist_ok=True)
     d = Decision(
         domain=domain,
         slug=slug,
@@ -148,16 +159,17 @@ def record(
         evolution_trigger=evolution_trigger or [],
         decided=date.today().isoformat(),
     )
-    path = DECISIONS_DIR / d.filename
+    path = directory / d.filename
     path.write_text(_render(d))
     return d
 
 
 def query(domain: str | None = None, status: str = "active") -> list[Decision]:
-    if not DECISIONS_DIR.exists():
+    directory = decisions_dir()
+    if not directory.exists():
         return []
     results = []
-    for f in sorted(DECISIONS_DIR.iterdir()):
+    for f in sorted(directory.iterdir()):
         if not f.suffix == ".md":
             continue
         d = _load(f)
@@ -183,8 +195,9 @@ def supersede(old_slug: str, new_slug: str, reason: str):
     old = _load(old_path)
     old.status = "superseded"
     old_path.write_text(_render(old))
-    ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
-    old_path.rename(ARCHIVE_DIR / old_path.name)
+    directory = archive_dir()
+    directory.mkdir(parents=True, exist_ok=True)
+    old_path.rename(directory / old_path.name)
 
 
 def related_to(task_title: str) -> list[Decision]:
@@ -246,10 +259,11 @@ def validate(path: Path) -> list[str]:
 
 
 def validate_all() -> dict[str, list[str]]:
-    if not DECISIONS_DIR.exists():
+    directory = decisions_dir()
+    if not directory.exists():
         return {}
     results = {}
-    for f in sorted(DECISIONS_DIR.iterdir()):
+    for f in sorted(directory.iterdir()):
         if not f.suffix == ".md":
             continue
         errors = validate(f)
