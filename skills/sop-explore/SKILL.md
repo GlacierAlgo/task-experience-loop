@@ -18,7 +18,7 @@ description: "Map a bounded unknown area until enough understanding exists to ch
 - 区分已验证事实、推测和仍缺信息。
 - 优先使用本地上下文、TEL、代码和项目文档；只在必要时查官方文档或联网搜索。
 - 输出可行动方向，但不替代需要裁决的设计选择。
-- 认知足够后 transition 到 `propose`、`review`、`diagnose`、`migrate`、`reduce`、`conform`、`ship`、`handoff`、`upload` 或 `bootstrap`。
+- 认知足够后 transition 到 `propose`、`review`、`diagnose`、`migrate`、`reduce`、`conform`、`ship`、`upload` 或 `bootstrap`。
 
 ## 不需要做
 

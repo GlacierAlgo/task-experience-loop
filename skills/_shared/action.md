@@ -53,8 +53,6 @@ action 结束时只判断是否需要进入另一个 action：
 SOP 之间允许 pointer to pointer：一个 action 可以只指出下一个更合适的 action，由下一个 action 自己读取上下文并接管，不需要当前 action 展开对方流程。
 
 - 任务完成且用户明显转向新 topic，或需要把当前 repo 变更推到 remote 时，transition 到 `sop-upload`。
-- 当前任务产生了另一台 local machine 需要 `git pull` 后看到的压缩信息点时，transition 到 `sop-handoff`。
-- 跨项目、跨模块、GitHub Issues 或正式 ownership/boundary 沟通，transition 到 `sop-communicate`。
 - pointer 组合只表达接管关系，不表示所有 action 都必须执行；每个 action 仍按自己的适用前提决定是否真正运行。
 
 ## TEL 写入闸门

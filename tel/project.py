@@ -4,23 +4,14 @@ import os
 import re
 from pathlib import Path
 
-WINDOWS_DEFAULT_TEL_DIR = Path("D:/obs/tel")
-MAC_DEFAULT_TEL_DIR = Path("/Users/yanghh/obs/tel")
-DEFAULT_TEL_DIR = WINDOWS_DEFAULT_TEL_DIR if os.name == "nt" else MAC_DEFAULT_TEL_DIR
+DEFAULT_TEL_DIR = Path("/Users/yanghh/obs/tel")
 
 
 def tel_dir() -> Path:
     configured = os.environ.get("TEL_DIR")
     if not configured:
-        return default_tel_dir()
+        return DEFAULT_TEL_DIR
     return Path(configured).expanduser()
-
-
-def default_tel_dir(platform: str | None = None) -> Path:
-    platform_name = platform or os.name
-    if platform_name == "nt":
-        return WINDOWS_DEFAULT_TEL_DIR
-    return MAC_DEFAULT_TEL_DIR
 
 
 def slugify(value: str) -> str:

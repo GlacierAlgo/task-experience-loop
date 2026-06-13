@@ -66,10 +66,6 @@ class ProjectScopedKanbanTests(unittest.TestCase):
 
         self.assertEqual(project.tel_dir(), project.DEFAULT_TEL_DIR)
 
-    def test_default_tel_dir_is_platform_specific(self) -> None:
-        self.assertEqual(project.default_tel_dir("nt"), Path("D:/obs/tel"))
-        self.assertEqual(project.default_tel_dir("posix"), Path("/Users/yanghh/obs/tel"))
-
     def test_tel_dir_environment_override_wins(self) -> None:
         override = Path(self.tempdir.name, "custom-tel")
         os.environ["TEL_DIR"] = str(override)

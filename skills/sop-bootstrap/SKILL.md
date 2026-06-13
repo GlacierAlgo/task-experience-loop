@@ -20,7 +20,7 @@ description: "Bootstrap a distant objective into boundary decisions, module coll
 - 前置不确定性：列出会改变边界、接口或协作方式的未知点，并归属到需要验证的工作面。
 - 对比当前状态与目标状态，显影已知缺口、未知缺口和需要验证的工作面。
 - 用当前上下文、TEL、kanban Done、patterns、decisions、代码和参考案例补齐目标空间。
-- 把缺口归属到可执行 action：`explore`、`propose`、`scaffold`、`conform`、`migrate`、`diagnose`、`reduce`、`replicate`、`review`、`ship`。
+- 把缺口归属到可执行 action：`explore`、`propose`、`scaffold`、`conform`、`migrate`、`diagnose`、`reduce`、`review`、`ship`。
 - 找出最先暴露、最阻塞后续推进的第一批工作面。
 - 每轮 action 后根据新证据更新边界和缺口场，而不是维护固定计划。
 

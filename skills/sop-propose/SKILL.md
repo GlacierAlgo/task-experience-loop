@@ -19,7 +19,7 @@ description: "Turn a bounded vague goal into decision-dense context for autonomo
 - 暴露仍需裁决的选项空间，并只在既有约束无法裁决时问用户。
 - 目标过远、工作面不可见或无法枚举主要缺口时 transition 到 `bootstrap`。
 - 产出足够后 transition 到具体执行 action。
-- 如果方案会影响另一台 local machine 的初始化、分工或操作边界，transition 到 `handoff`；如果用户随后切换 topic 且有 repo 变更，transition 到 `upload`。
+- 如果用户随后切换 topic 且有 repo 变更，transition 到 `upload`。
 
 ## 不需要做
 
