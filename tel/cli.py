@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import click
 
-from tel import context, decisions, kanban, patterns
+from tel import compact, context, decisions, kanban, nouns, organize, patterns
 
 
 @click.group()
@@ -98,6 +98,43 @@ def context_cmd():
     """Regenerate loop-context.md."""
     context.regenerate()
     click.echo(f"Regenerated loop-context.md for {kanban.current_project()}")
+
+
+@cli.command("organize")
+@click.option("--project", default=None, help="Project id to include when it has no kanban entries")
+@click.option("--quiet", is_flag=True, help="Suppress summary output")
+def organize_cmd(project: str | None, quiet: bool):
+    """Organize TEL experience into summaries and refresh loop-context.md."""
+    report = organize.organize(project_id=project)
+    if quiet:
+        return
+    click.echo(f"Organized TEL experience under {report.summary_dir}")
+    click.echo(
+        "Indexed "
+        f"{report.decision_count} decisions, "
+        f"{report.pattern_count} patterns, "
+        f"{report.project_count} projects"
+    )
+    if report.validation_error_count or report.duplicate_candidate_count:
+        click.echo(
+            "Review queue: "
+            f"{report.validation_error_count} validation issue files, "
+            f"{report.duplicate_candidate_count} duplicate candidates"
+        )
+
+
+@cli.command("compact")
+def compact_cmd():
+    """Generate compact proposals for user-approved memory cleanup."""
+    report = compact.write_review()
+    click.echo(f"Wrote compact review: {report.review_path}")
+    click.echo(
+        "Found "
+        f"{report.proposal_count} review item(s) across "
+        f"{report.decision_count} active decisions and "
+        f"{report.pattern_count} patterns."
+    )
+    click.echo("Source records were not changed. Ask an agent to review and request approval before edits.")
 
 
 @cli.command("status")
@@ -257,6 +294,32 @@ def pattern_search(keyword):
         click.echo(f"    Situation: {p.situation[:80]}")
         click.echo(f"    Action: {p.action[:80]}")
         click.echo()
+
+
+@cli.group()
+def noun():
+    """Manage user-specific global nouns."""
+
+
+@noun.command("add")
+@click.argument("term")
+@click.argument("meaning", nargs=-1, required=True)
+def noun_add(term: str, meaning: tuple[str, ...]):
+    """Record a global noun resolution."""
+    entry = nouns.record(term=term, meaning=" ".join(meaning))
+    click.echo(f"Recorded noun: {entry.term} -> {entry.meaning}")
+    context.regenerate()
+
+
+@noun.command("list")
+def noun_list():
+    """List global noun resolutions."""
+    entries = nouns.query()
+    if not entries:
+        click.echo("No global nouns yet.")
+        return
+    for entry in entries:
+        click.echo(f"  {entry.term} -> {entry.meaning}")
 
 
 def main():

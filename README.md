@@ -16,6 +16,19 @@ bullet level is the project id and the second bullet level contains tasks. TEL
 derives the project from the nearest Git root directory name; set `TEL_PROJECT`
 to override the scope for non-repository workspaces.
 
+Global user-specific nouns live in `nouns.md` and are included in generated
+context as pointer-resolution hints:
+
+```bash
+tel noun add aliyun "SSH host aliyun, Alibaba Cloud server"
+tel noun list
+```
+
+`tel compact` generates `summaries/compact.md` with candidate memory-pool
+cleanup proposals. It does not edit source decision or pattern records; an agent
+must inspect the referenced records and ask for user approval before applying any
+merge, deprecation, supersession, edit, or deletion.
+
 The install target for global Codex usage is:
 
 ```bash

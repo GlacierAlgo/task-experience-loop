@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from tel import decisions, kanban, patterns, project
+from tel import decisions, kanban, nouns, patterns, project
 
 
 def _context_path() -> Path:
@@ -14,14 +14,54 @@ def _constraints_path() -> Path:
     return project.tel_dir() / "constraints.md"
 
 
-def _append_grouped(sections: list[str], items: list) -> None:
+def _append_grouped(sections: list[str], items: list, *, max_items_per_domain: int | None = None) -> None:
     by_domain: dict[str, list] = defaultdict(list)
     for d in items:
         by_domain[d.domain].append(d)
     for domain in sorted(by_domain.keys()):
         sections.append(f"### {domain}")
-        for d in by_domain[domain]:
+        domain_items = by_domain[domain]
+        shown = domain_items if max_items_per_domain is None else domain_items[:max_items_per_domain]
+        for d in shown:
             sections.append(f"- [{d.filename}](decisions/{d.filename}): {d.choice}")
+        if max_items_per_domain is not None and len(domain_items) > max_items_per_domain:
+            sections.append(f"- ... {len(domain_items) - max_items_per_domain} more; see summaries/domains/{domain}.md")
+
+
+def _append_summary_links(sections: list[str], current_project: str) -> None:
+    summary_root = project.tel_dir() / "summaries"
+    if not summary_root.exists():
+        return
+    sections.append("## Experience Summaries")
+    index_path = summary_root / "index.md"
+    project_path = summary_root / "projects" / f"{current_project}.md"
+    compact_path = summary_root / "compact.md"
+    if index_path.exists():
+        sections.append("- [TEL summary index](summaries/index.md)")
+    if project_path.exists():
+        sections.append(f"- [Current project summary](summaries/projects/{current_project}.md)")
+    if compact_path.exists():
+        sections.append("- [Compact review](summaries/compact.md)")
+    sections.append("")
+
+
+def _append_global_nouns(sections: list[str]) -> None:
+    all_nouns = nouns.query()
+    if not all_nouns:
+        return
+    sections.append("## Global Nouns")
+    for noun in all_nouns[:12]:
+        sections.append(f"- {noun.term} -> {noun.meaning}")
+    if len(all_nouns) > 12:
+        sections.append(f"- ... {len(all_nouns) - 12} more; see nouns.md")
+    sections.append("")
+
+
+def _one_line(text: str, limit: int = 220) -> str:
+    value = " ".join(text.split())
+    if len(value) <= limit:
+        return value
+    return value[: limit - 3].rstrip() + "..."
 
 
 def assemble(project_id: str | None = None) -> str:
@@ -64,17 +104,24 @@ def assemble(project_id: str | None = None) -> str:
         sections.append("(none defined)")
     sections.append("")
 
+    _append_global_nouns(sections)
+
+    _append_summary_links(sections, current_project)
+
     sections.append("## Relevant Decisions")
     all_active = decisions.query(status="active")
     if active:
         related = decisions.related_to(active.title)
         if related:
-            for d in related:
-                sections.append(f"- [{d.filename}](decisions/{d.filename}): {d.choice}")
+            for d in related[:15]:
+                sections.append(f"- [{d.filename}](decisions/{d.filename}): {_one_line(d.choice)}")
+            if len(related) > 15:
+                sections.append(f"- ... {len(related) - 15} more; see summaries/index.md")
         else:
-            _append_grouped(sections, all_active)
+            sections.append("(none matched active task; see summaries/index.md)")
     else:
-        _append_grouped(sections, all_active)
+        if all_active:
+            sections.append("No active task. Use summaries/index.md and the current project summary for lookup.")
     if not all_active:
         sections.append("(none yet)")
     sections.append("")
@@ -111,5 +158,9 @@ def assemble(project_id: str | None = None) -> str:
     return "\n".join(sections) + "\n"
 
 
-def regenerate(project_id: str | None = None):
+def regenerate(project_id: str | None = None, *, refresh_summaries: bool = True):
+    if refresh_summaries:
+        from tel import organize
+
+        organize.write_summaries(project_id=project_id)
     _context_path().write_text(assemble(project_id))
