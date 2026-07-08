@@ -32,8 +32,15 @@ description: "Front-load uncertainty on a task at the design edge, then grill th
 
 ### 3. 落盘选择
 
-- 分离 durable 选择与一次性任务决策：前者过 TEL 写入闸门记为 decision，后者只进 kanban 或任务笔记。
-- 只有能防止 3 个月后的 agent 做错选择或重复争论的重要选择才写，一次性决策不写。
+Codex 通常不进入 query-user 模式，grill 是重要选择通过讨论定下来的主要窗口。窗口关闭前必须把 durable 选择写进 TEL，否则讨论蒸发。
+
+- 分离 durable 选择与一次性任务决策：前者写成 decision，后者只进 kanban 或任务笔记。
+- 判据：只有能防止 3 个月后的 agent 做错选择或重复争论的重要选择才写；一次性任务决策、原始调研笔记、代码里已显然的实现细节不写。
+- 捕获路径（不走交互式 `tel decide`，直接写文件）：
+  1. 写 `/Users/yanghh/obs/tel/decisions/{domain}--{slug}.md`，`domain` 取 `architecture|interface|data|deployment|frontend|workflow|research`，`slug` 用短 kebab-case。
+  2. 用既有六段结构：frontmatter（`domain` / `decided: {YYYY-MM-DD}` / `status: active`）+ `# 选择标题` + `## Decision Point` + `## Option Space` + `## Choice` + `## Constraints & Rationale` + `## Implications` + `## Evolution Trigger`。标题写“选了什么”，不写“在决定什么”。
+  3. 写完跑 `tel context` 重新生成 `loop-context.md`。
+- 已有相关 decision 时，判断本次是 supersede 还是 apply：supersede 才新写或改状态，apply 不重复记。
 
 ## 不需要做
 
