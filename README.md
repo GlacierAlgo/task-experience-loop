@@ -35,5 +35,8 @@ The install target for global Codex usage is:
 ~/.codex/skills
 ```
 
-The current SOP skill set uses canonical hyphen-case names such as `sop-explore`,
-`sop-propose`, `sop-diagnose`, and `sop-bootstrap`.
+The current SOP skill set uses canonical hyphen-case names such as `sop-grill`,
+`sop-explore`, `sop-propose`, `sop-diagnose`, and `sop-bootstrap`. `sop-grill` is
+the design-edge entry action: it front-loads uncertainty (historical TEL plus web
+search) and grills the user in an iterative loop until the design context is dense
+enough to hand off to a concrete verb.
