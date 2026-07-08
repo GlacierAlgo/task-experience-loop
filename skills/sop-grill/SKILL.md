@@ -20,7 +20,7 @@ description: "Front-load uncertainty on a task at the design edge, then grill th
 
 ### 1. 前置不确定性
 
-- 拉历史 TEL：读 `loop-context.md`，对目标关键词跑 `tel search` / `tel pattern search`，看 `tel noun list`，找出触及本任务的既有 durable 选择与可复用做法。
+- 拉历史 TEL：读 `loop-context.md`，对目标关键词跑 `tel search`，看 `tel noun list`，需要复用做法时直接 grep `patterns/`，找出触及本任务的既有 durable 选择与可复用做法。
 - 联网核实外部事实：会改变接口或存储形状的 API、依赖、政策、时效性行为，用 web search 先验证再设计。
 - 沿四个轴显影不确定性场：边界（谁拥有状态/暴露能力）、外部事实（须核实才能动手的口径）、用户裁决（无法从代码/TEL/测试推出的偏好或不可逆选择）、持久性（哪些结果值得写 TEL，哪些只是任务笔记）。
 
@@ -36,7 +36,7 @@ Codex 通常不进入 query-user 模式，grill 是重要选择通过讨论定�
 
 - 分离 durable 选择与一次性任务决策：前者写成 decision，后者只进 kanban 或任务笔记。
 - 判据：只有能防止 3 个月后的 agent 做错选择或重复争论的重要选择才写；一次性任务决策、原始调研笔记、代码里已显然的实现细节不写。
-- 捕获路径（不走交互式 `tel decide`，直接写文件）：
+- 捕获路径（直接写文件，无交互式命令）：
   1. 写 `/Users/yanghh/obs/tel/decisions/{domain}--{slug}.md`，`domain` 取 `architecture|interface|data|deployment|frontend|workflow|research`，`slug` 用短 kebab-case。
   2. 用既有六段结构：frontmatter（`domain` / `decided: {YYYY-MM-DD}` / `status: active`）+ `# 选择标题` + `## Decision Point` + `## Option Space` + `## Choice` + `## Constraints & Rationale` + `## Implications` + `## Evolution Trigger`。标题写“选了什么”，不写“在决定什么”。
   3. 写完跑 `tel context` 重新生成 `loop-context.md`。
