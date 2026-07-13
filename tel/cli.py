@@ -8,6 +8,8 @@ from tel import compact, context, decisions, kanban, nouns, organize
 @click.group()
 def cli():
     """Task-Experience Loop — design decision asset manager."""
+    # Ensure loop-context.md matches the current project (cwd-based)
+    context.ensure_current()
 
 
 @cli.group()
@@ -57,10 +59,14 @@ def task_list():
 
 
 @cli.command("context")
-def context_cmd():
-    """Regenerate loop-context.md."""
-    context.regenerate()
-    click.echo(f"Regenerated loop-context.md for {kanban.current_project()}")
+@click.option("--stdout", "to_stdout", is_flag=True, help="Print context to stdout without writing loop-context.md")
+def context_cmd(to_stdout: bool):
+    """Regenerate loop-context.md (or print to stdout with --stdout)."""
+    if to_stdout:
+        click.echo(context.assemble())
+    else:
+        context.regenerate()
+        click.echo(f"Regenerated loop-context.md for {kanban.current_project()}")
 
 
 @cli.command("organize")

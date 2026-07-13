@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fcntl
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -57,17 +58,31 @@ def record(term: str, meaning: str) -> Noun:
     if not new_noun.term or not new_noun.meaning:
         raise ValueError("Both term and meaning are required")
 
-    entries = {noun.term.lower(): noun for noun in query()}
-    entries[new_noun.term.lower()] = new_noun
+    # Use advisory file lock to prevent concurrent write races
+    with open(path, "a+") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            f.seek(0)
+            entries: dict[str, Noun] = {}
+            for line in f.read().splitlines():
+                noun = _parse_line(line)
+                if noun:
+                    entries[noun.term.lower()] = noun
+            entries[new_noun.term.lower()] = new_noun
 
-    lines = [
-        "# Global Nouns",
-        "",
-        "User-specific terms that agents should resolve before generic meanings.",
-        "",
-    ]
-    for key in sorted(entries):
-        noun = entries[key]
-        lines.append(f"- {noun.term} -> {noun.meaning}")
-    path.write_text("\n".join(lines) + "\n")
+            lines = [
+                "# Global Nouns",
+                "",
+                "User-specific terms that agents should resolve before generic meanings.",
+                "",
+            ]
+            for key in sorted(entries):
+                noun = entries[key]
+                lines.append(f"- {noun.term} -> {noun.meaning}")
+
+            f.seek(0)
+            f.truncate()
+            f.write("\n".join(lines) + "\n")
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
     return new_noun

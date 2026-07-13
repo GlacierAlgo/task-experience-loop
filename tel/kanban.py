@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fcntl
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -130,24 +131,50 @@ def _read_all_boards() -> dict[str, dict[str, list[Task]]]:
 
 
 def _write_all_boards(boards: dict[str, dict[str, list[Task]]]) -> None:
+    """Write boards to disk. Used for bulk/admin operations only."""
     path = kanban_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(_render({name: board for name, board in boards.items() if _has_any_task(board)}))
+    with open(path, "a+") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            f.seek(0)
+            f.truncate()
+            f.write(_render({n: b for n, b in boards.items() if _has_any_task(b)}))
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
+
+
+def _atomic_update(project_id: str | None, fn) -> dict[str, list[Task]]:
+    """Read-modify-write a project's board atomically under file lock.
+
+    `fn` receives the current board and must return the updated board.
+    """
+    path = kanban_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    key = _project_key(project_id)
+
+    with open(path, "a+") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            f.seek(0)
+            all_boards = _parse(f.read())
+            board = all_boards.get(key, _empty_board())
+            board = fn(board)
+            if _has_any_task(board):
+                all_boards[key] = board
+            else:
+                all_boards.pop(key, None)
+            f.seek(0)
+            f.truncate()
+            f.write(_render({n: b for n, b in all_boards.items() if _has_any_task(b)}))
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
+    return board
 
 
 def _read_board(project_id: str | None = None) -> dict[str, list[Task]]:
     boards = _read_all_boards()
     return boards.get(_project_key(project_id), _empty_board())
-
-
-def _write_board(board: dict[str, list[Task]], project_id: str | None = None):
-    boards = _read_all_boards()
-    key = _project_key(project_id)
-    if _has_any_task(board):
-        boards[key] = board
-    else:
-        boards.pop(key, None)
-    _write_all_boards(boards)
 
 
 def get_active(project_id: str | None = None) -> Task | None:
@@ -157,48 +184,51 @@ def get_active(project_id: str | None = None) -> Task | None:
 
 
 def add(title: str, column: str = "Backlog", project_id: str | None = None):
-    board = _read_board(project_id)
-    board[column].append(Task(title=title, column=column))
-    _write_board(board, project_id)
+    def _add(board):
+        board[column].append(Task(title=title, column=column))
+        return board
+    _atomic_update(project_id, _add)
 
 
 def activate(title: str, project_id: str | None = None):
-    board = _read_board(project_id)
-    found = None
-    for col in COLUMNS:
-        for task in board[col]:
-            if task.title == title:
-                found = task
-                board[col].remove(task)
+    def _activate(board):
+        found = None
+        for col in COLUMNS:
+            for task in board[col]:
+                if task.title == title:
+                    found = task
+                    board[col].remove(task)
+                    break
+            if found:
                 break
-        if found:
-            break
-    if not found:
-        raise ValueError(f"Task not found: {title}")
-    found.column = "Active"
-    board["Active"].append(found)
-    _write_board(board, project_id)
+        if not found:
+            raise ValueError(f"Task not found: {title}")
+        found.column = "Active"
+        board["Active"].append(found)
+        return board
+    _atomic_update(project_id, _activate)
 
 
 def complete(title: str, project_id: str | None = None):
     from datetime import date
 
-    board = _read_board(project_id)
-    found = None
-    for col in COLUMNS:
-        for task in board[col]:
-            if task.title == title:
-                found = task
-                board[col].remove(task)
+    def _complete(board):
+        found = None
+        for col in COLUMNS:
+            for task in board[col]:
+                if task.title == title:
+                    found = task
+                    board[col].remove(task)
+                    break
+            if found:
                 break
-        if found:
-            break
-    if not found:
-        raise ValueError(f"Task not found: {title}")
-    found.column = "Done"
-    found.meta = date.today().isoformat()
-    board["Done"].append(found)
-    _write_board(board, project_id)
+        if not found:
+            raise ValueError(f"Task not found: {title}")
+        found.column = "Done"
+        found.meta = date.today().isoformat()
+        board["Done"].append(found)
+        return board
+    _atomic_update(project_id, _complete)
 
 
 def list_all(project_id: str | None = None) -> dict[str, list[Task]]:

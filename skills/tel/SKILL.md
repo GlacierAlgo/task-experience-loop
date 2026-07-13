@@ -7,12 +7,14 @@ description: Task-Experience Loop — read loop-context.md on session start, rec
 
 ## On Session Start
 
-Read the loop context:
+Read the loop context for the **current working directory's project**:
 ```bash
-cat /Users/yanghh/obs/tel/loop-context.md
+tel context --stdout
 ```
 
-This gives you: active task, global constraints, global nouns, design decisions, reusable patterns, and planned next steps.
+This gives you: active task, global constraints, global nouns, design decisions, reusable patterns, and planned next steps — all scoped to the cwd project automatically.
+
+If you read `/Users/yanghh/obs/tel/loop-context.md` directly and its `Project:` line differs from your cwd project, **ignore the stale file** — use `tel context --stdout` instead.
 
 Global nouns are user-specific term resolutions and take precedence over generic meanings unless the current user message explicitly overrides them.
 
@@ -161,3 +163,17 @@ tel context
 - Execute autonomously when choice aligns with existing constraints/decisions
 - Execute autonomously when choosing the simpler option
 - Pause when constraints conflict, domain is new, or superseding existing decision
+
+## Cross-Project Scope
+
+Decisions, patterns, constraints, and nouns are **global shared knowledge** — not owned by any single project. An agent working in `shadow-backtest` can and should write a decision with domain `data` even if that decision was prompted by work in `shadow-derivatives`.
+
+**Project-scoped**: kanban tasks only. Use `tel task add/activate/done` which automatically targets the cwd project.
+
+**Global-scoped** (write from any project):
+- Decisions (`/Users/yanghh/obs/tel/decisions/`)
+- Patterns (`/Users/yanghh/obs/tel/patterns/`)
+- Constraints (`/Users/yanghh/obs/tel/constraints.md`)
+- Nouns (`tel noun add`)
+
+Never refuse to write a decision or pattern because `loop-context.md` points to a different project. The file is a cache; your cwd determines your project identity.

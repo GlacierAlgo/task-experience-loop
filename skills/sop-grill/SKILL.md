@@ -20,7 +20,7 @@ description: "Front-load uncertainty on a task at the design edge, then grill th
 
 ### 1. 前置不确定性
 
-- 拉历史 TEL：读 `loop-context.md`，对目标关键词跑 `tel search`，看 `tel noun list`，需要复用做法时直接 grep `patterns/`，找出触及本任务的既有 durable 选择与可复用做法。
+- 拉历史 TEL：运行 `tel context --stdout` 获取当前项目上下文，对目标关键词跑 `tel search`，看 `tel noun list`，需要复用做法时直接 grep `patterns/`，找出触及本任务的既有 durable 选择与可复用做法。
 - 联网核实外部事实：会改变接口或存储形状的 API、依赖、政策、时效性行为，用 web search 先验证再设计。
 - 沿四个轴显影不确定性场：边界（谁拥有状态/暴露能力）、外部事实（须核实才能动手的口径）、用户裁决（无法从代码/TEL/测试推出的偏好或不可逆选择）、持久性（哪些结果值得写 TEL，哪些只是任务笔记）。
 
