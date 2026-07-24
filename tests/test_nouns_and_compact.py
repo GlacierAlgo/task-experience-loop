@@ -98,6 +98,41 @@ class NounsAndCompactTests(unittest.TestCase):
         self.assertNotIn("stable-compatibility-boundary", rendered)
         self.assertIn("temporary-debug-route", rendered)
 
+    def test_decision_validation_accepts_ordered_options_and_prose_sections(self) -> None:
+        path = Path(self.tempdir.name, "decisions", "architecture--mixed-markdown.md")
+        path.parent.mkdir(parents=True)
+        path.write_text(
+            """---
+domain: architecture
+decided: 2026-07-24
+status: active
+---
+
+# Mixed Markdown Decision
+
+## Decision Point
+Which storage model should be used?
+
+## Option Space
+1. One shared store.
+2. One store per project.
+
+## Choice
+Use one store per project.
+
+## Constraints & Rationale
+Projects have independent lifecycles and access boundaries.
+
+## Implications
+Each project owns its migrations and backups.
+"""
+        )
+
+        self.assertEqual(decisions.validate(path), [])
+
+        path.write_text(path.read_text().replace("status: active", "status: accepted"))
+        self.assertIn("Invalid status 'accepted'", decisions.validate(path)[0])
+
 
 if __name__ == "__main__":
     unittest.main()

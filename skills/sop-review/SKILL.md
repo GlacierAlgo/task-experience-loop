@@ -18,7 +18,7 @@ description: "Assess a changeset, artifact, or system state against explicit cri
 - 用用户要求、TEL constraints、decisions、项目约定和证据支撑 findings。
 - 区分事实、风险、假设和个人偏好。
 - 按用户需要输出 verdict、问题盘点、风险清单或设计评审。
-- 发现需要修改时 transition 到 `diagnose`、`reduce`、`migrate`、`conform`、`propose` 或 `bootstrap`。
+- 发现需要修改时 transition 到 `diagnose`、`reduce`、`migrate`、`conform` 或 `propose`。
 
 ## 不需要做
 
@@ -27,7 +27,3 @@ description: "Assess a changeset, artifact, or system state against explicit cri
 - 不把“更安全 / 更灵活 / 更完整”当作无证据要求。
 - 不把局部 review 发现扩展成远目标计划，除非证据显示工作面本身未显影。
 - 不把 review 发现本身写入 TEL。
-
-## TEL 写入
-
-只有发现跨任务约束、确认可复用实践或暴露独立后续任务，并通过 TEL 写入闸门时写入。

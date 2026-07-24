@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
@@ -21,6 +22,7 @@ def archive_dir() -> Path:
 class Decision:
     domain: str
     slug: str
+    projects: list[str]
     decision_point: str
     option_space: list[str]
     choice: str
@@ -51,16 +53,39 @@ def _decision_path(slug: str) -> Path | None:
 
 def _parse_list_section(content: str, header: str) -> list[str]:
     lines = content.split("\n")
-    items = []
+    items: list[str] = []
+    current: list[str] = []
     in_section = False
+
+    def flush() -> None:
+        if current:
+            items.append(" ".join(current))
+            current.clear()
+
     for line in lines:
         if line.startswith("## ") and header.lower() in line.lower():
             in_section = True
             continue
         if line.startswith("## ") and in_section:
+            flush()
             break
-        if in_section and line.startswith("- "):
-            items.append(line[2:].strip())
+        if not in_section:
+            continue
+
+        stripped = line.strip()
+        if not stripped:
+            flush()
+            continue
+
+        item = re.match(r"^(?:[-*+]|\d+[.)])\s+(.+)$", stripped)
+        if item:
+            flush()
+            current.append(item.group(1).strip())
+            continue
+
+        current.append(stripped)
+
+    flush()
     return items
 
 
@@ -90,6 +115,7 @@ def _load(path: Path) -> Decision:
     return Decision(
         domain=domain,
         slug=slug,
+        projects=_parse_projects(post.metadata.get("projects", [])),
         decision_point=_parse_section_text(content, "Decision Point"),
         option_space=_parse_list_section(content, "Option Space"),
         choice=_parse_section_text(content, "Choice"),
@@ -101,14 +127,25 @@ def _load(path: Path) -> Decision:
     )
 
 
+def _parse_projects(value: object) -> list[str]:
+    if isinstance(value, str):
+        raw_projects = [value]
+    elif isinstance(value, (list, tuple, set)):
+        raw_projects = [str(item) for item in value]
+    else:
+        raw_projects = []
+    return list(dict.fromkeys(project.slugify(item) for item in raw_projects if item.strip()))
+
+
 def _render(d: Decision) -> str:
-    meta = frontmatter.Post(
-        content="",
-        handler=None,
-        domain=d.domain,
-        decided=d.decided or date.today().isoformat(),
-        status=d.status,
-    )
+    metadata = {
+        "domain": d.domain,
+        "decided": d.decided or date.today().isoformat(),
+        "status": d.status,
+    }
+    if d.projects:
+        metadata["projects"] = d.projects
+    meta = frontmatter.Post(content="", handler=None, **metadata)
 
     body_parts = [
         f"# {d.choice}",
@@ -145,12 +182,14 @@ def record(
     constraints: list[str],
     implications: list[str],
     evolution_trigger: list[str] | None = None,
+    projects: list[str] | None = None,
 ) -> Decision:
     directory = decisions_dir()
     directory.mkdir(parents=True, exist_ok=True)
     d = Decision(
         domain=domain,
         slug=slug,
+        projects=_parse_projects(projects or []),
         decision_point=decision_point,
         option_space=option_space,
         choice=choice,
@@ -221,6 +260,7 @@ def related_to(task_title: str) -> list[Decision]:
 
 REQUIRED_SECTIONS = ("Decision Point", "Option Space", "Choice", "Constraints & Rationale", "Implications")
 VALID_DOMAINS = ("architecture", "interface", "data", "deployment", "frontend", "workflow", "research")
+VALID_STATUSES = ("active", "superseded")
 
 
 def validate(path: Path) -> list[str]:
@@ -237,6 +277,9 @@ def validate(path: Path) -> list[str]:
 
     if not d.decided:
         errors.append("Missing decided date in frontmatter")
+
+    if d.status not in VALID_STATUSES:
+        errors.append(f"Invalid status '{d.status}', must be one of: {', '.join(VALID_STATUSES)}")
 
     if not d.choice:
         errors.append("Empty ## Choice section")

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from tel import project
 
-COLUMNS = ("Backlog", "Active", "Done")
+COLUMNS = ("Backlog", "Active")
 LEGACY_PROJECT = "legacy"
 
 
@@ -55,7 +55,16 @@ def _parse_flat(text: str) -> dict[str, list[Task]]:
 
 
 def _has_nested_tasks(text: str) -> bool:
-    return any(re.match(r"^\s+- ", line) for line in text.splitlines())
+    current_col = None
+    for line in text.splitlines():
+        header = re.match(r"^## (.+)$", line)
+        if header:
+            name = header.group(1).strip()
+            current_col = name if name in COLUMNS else None
+            continue
+        if current_col and re.match(r"^\s+- ", line):
+            return True
+    return False
 
 
 def _parse(text: str) -> dict[str, dict[str, list[Task]]]:
@@ -183,52 +192,75 @@ def get_active(project_id: str | None = None) -> Task | None:
     return tasks[0] if tasks else None
 
 
-def add(title: str, column: str = "Backlog", project_id: str | None = None):
+def add(title: str, project_id: str | None = None) -> Task:
+    added: Task | None = None
+
     def _add(board):
-        board[column].append(Task(title=title, column=column))
-        return board
-    _atomic_update(project_id, _add)
-
-
-def activate(title: str, project_id: str | None = None):
-    def _activate(board):
-        found = None
+        nonlocal added
         for col in COLUMNS:
             for task in board[col]:
                 if task.title == title:
-                    found = task
-                    board[col].remove(task)
-                    break
-            if found:
-                break
-        if not found:
-            raise ValueError(f"Task not found: {title}")
-        found.column = "Active"
-        board["Active"].append(found)
+                    added = task
+                    return board
+        added = Task(title=title)
+        board["Backlog"].append(added)
         return board
-    _atomic_update(project_id, _activate)
+
+    _atomic_update(project_id, _add)
+    assert added is not None
+    return added
 
 
-def complete(title: str, project_id: str | None = None):
-    from datetime import date
+def start(title: str, project_id: str | None = None) -> Task:
+    started: Task | None = None
+
+    def _start(board):
+        nonlocal started
+        for task in board["Active"]:
+            if task.title == title:
+                started = task
+                return board
+        if board["Active"]:
+            raise ValueError(f"Active task already exists: {board['Active'][0].title}")
+
+        for task in board["Backlog"]:
+            if task.title == title:
+                board["Backlog"].remove(task)
+                started = task
+                break
+        if started is None:
+            started = Task(title=title)
+        started.column = "Active"
+        board["Active"].append(started)
+        return board
+
+    _atomic_update(project_id, _start)
+    assert started is not None
+    return started
+
+
+def complete(title: str | None = None, project_id: str | None = None) -> Task:
+    completed: Task | None = None
 
     def _complete(board):
-        found = None
+        nonlocal completed
+        if title is None:
+            if not board["Active"]:
+                raise ValueError("No active task")
+            completed = board["Active"].pop(0)
+            return board
+
         for col in COLUMNS:
             for task in board[col]:
                 if task.title == title:
-                    found = task
                     board[col].remove(task)
-                    break
-            if found:
-                break
-        if not found:
-            raise ValueError(f"Task not found: {title}")
-        found.column = "Done"
-        found.meta = date.today().isoformat()
-        board["Done"].append(found)
-        return board
+                    completed = task
+                    return board
+        raise ValueError(f"Task not found: {title}")
+
     _atomic_update(project_id, _complete)
+    assert completed is not None
+    return completed
 
 
 def list_all(project_id: str | None = None) -> dict[str, list[Task]]:

@@ -23,6 +23,21 @@ link_into() {
   fi
   mkdir -p "$target"
 
+  # Prune only stale symlinks previously managed by this repository.
+  local existing existing_src
+  for existing in "$target"/*; do
+    [ -L "$existing" ] || continue
+    existing_src="$(readlink "$existing")"
+    case "$existing_src" in
+      "$REPO_SKILLS"/*)
+        if [ ! -e "$existing_src" ]; then
+          rm "$existing"
+          echo "  pruned stale $(basename "$existing") -> $existing"
+        fi
+        ;;
+    esac
+  done
+
   local src name link
   for src in "$REPO_SKILLS"/*/; do
     src="${src%/}"

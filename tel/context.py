@@ -67,63 +67,50 @@ def _one_line(text: str, limit: int = 220) -> str:
 def _relevant_decisions(current_project: str, active_task: kanban.Task | None) -> list[decisions.Decision]:
     """Find decisions relevant to the current context.
 
-    Strategy: combine active task keyword matching with project-name matching.
-    Requires a minimum relevance score to avoid flooding context with loosely
-    related decisions (e.g. all "shadow-*" projects sharing one word).
+    Explicit project ownership is authoritative. Active-task keyword matching
+    may add cross-project/global decisions, but project names are never inferred
+    from prose or historical task titles.
     """
     all_active = decisions.query(status="active")
     if not all_active:
         return []
 
-    # Collect relevance signals from multiple sources
-    keywords: set[str] = set()
+    project_matches = [d for d in all_active if current_project in d.projects]
+    if not active_task:
+        return project_matches
 
-    # Signal 1: active task title words (strongest intent signal)
-    if active_task:
-        keywords.update(active_task.title.lower().replace("-", " ").replace("_", " ").split())
+    task_words = set(active_task.title.lower().replace("-", " ").replace("_", " ").split())
 
-    # Signal 2: project name words (e.g. "shadow-backtest" → {"shadow", "backtest"})
-    project_words = set(current_project.lower().replace("-", " ").replace("_", " ").split())
-    keywords.update(project_words)
-
-    # Remove noise words that cause false positives
     noise = {"the", "a", "an", "and", "or", "of", "to", "in", "for", "is", "it", "on",
              "no", "not", "as", "at", "by", "be", "do", "use", "all", "this", "that",
              "with", "from", "are", "was", "were", "been", "has", "have", "had"}
-    keywords -= noise
+    task_words -= noise
+    keywords = task_words
+    required_hits = 2 if len(keywords) > 1 else 1
 
-    # Require multi-word project names to match at least 2 words to avoid
-    # "shadow" alone pulling in all shadow-* decisions
-    min_score = 2 if len(project_words - noise) > 1 and not active_task else 1
-
-    # Score each decision by keyword overlap
     scored: list[tuple[int, decisions.Decision]] = []
     for d in all_active:
-        score = 0
+        if d in project_matches:
+            continue
         domain_words = set(d.domain.lower().replace("-", " ").replace("_", " ").split())
         choice_words = set(d.choice.lower().replace("-", " ").replace("_", " ").split())
         point_words = set(d.decision_point.lower().replace("-", " ").replace("_", " ").split())
         slug_words = set(d.slug.lower().replace("-", " ").replace("_", " ").split())
+        decision_words = domain_words | choice_words | point_words | slug_words
 
-        # Slug match is strong (directly names the topic)
+        if len(keywords & decision_words) < required_hits:
+            continue
+
         slug_hits = len(keywords & slug_words)
         domain_hits = len(keywords & domain_words)
         choice_hits = len(keywords & choice_words)
         point_hits = len(keywords & point_words)
 
-        score += slug_hits * 3
-        score += domain_hits * 2
-        score += choice_hits * 2
-        score += point_hits * 1
-
-        if score >= min_score:
-            scored.append((score, d))
+        score = slug_hits * 3 + domain_hits * 2 + choice_hits * 2 + point_hits
+        scored.append((score, d))
 
     scored.sort(key=lambda x: x[0], reverse=True)
-    return [d for _, d in scored]
-
-    scored.sort(key=lambda x: x[0], reverse=True)
-    return [d for _, d in scored]
+    return project_matches + [d for _, d in scored]
 
 
 def assemble(project_id: str | None = None) -> str:
@@ -180,6 +167,10 @@ def assemble(project_id: str | None = None) -> str:
             sections.append(f"- [{d.filename}](decisions/{d.filename}): {_one_line(d.choice)}")
         if len(related) > 15:
             sections.append(f"- ... {len(related) - 15} more; see summaries/index.md")
+    elif not active:
+        sections.append(
+            "No active task. Use summaries/index.md and the current project summary for lookup."
+        )
     else:
         all_active = decisions.query(status="active")
         if all_active:
@@ -189,21 +180,8 @@ def assemble(project_id: str | None = None) -> str:
     sections.append("")
 
     # --- Project-specific progress ---
-    sections.append("## Recent Completions")
-    board = kanban.list_all(current_project)
-    done = board.get("Done", [])
-    recent = done[-3:] if len(done) > 3 else done
-    if recent:
-        for task in reversed(recent):
-            line = f"- {task.title}"
-            if task.meta:
-                line += f" ({task.meta})"
-            sections.append(line)
-    else:
-        sections.append("(none yet)")
-    sections.append("")
-
     sections.append("## Next Steps (Agent-Planned)")
+    board = kanban.list_all(current_project)
     backlog = board.get("Backlog", [])
     if backlog:
         for i, task in enumerate(backlog[:5], 1):

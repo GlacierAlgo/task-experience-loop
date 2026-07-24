@@ -18,7 +18,7 @@ description: "Align current state with a concrete reference or standard. Trigger
 - 明确当前状态、对齐范围、可接受差异和验证方式。
 - 消除范围内的可见或可测差距，并验证关键行为不回归。
 - 发现参考本身有问题时指出问题，不盲从参考。
-- 完成后判断是否需要 transition 到 `review`、`migrate`、`diagnose`、`propose` 或 `bootstrap`。
+- 完成后判断是否需要 transition 到 `review`、`migrate`、`diagnose` 或 `propose`。
 
 ## 不需要做
 
@@ -27,7 +27,3 @@ description: "Align current state with a concrete reference or standard. Trigger
 - 不替用户重新设计目标原则。
 - 不在目标空间不清时猜测参考之外的工作面。
 - 不为了对齐引入无关功能或重构。
-
-## TEL 写入
-
-只在形成可复用视觉标准、接口契约或跨任务对齐方法，并通过 TEL 写入闸门时写入。

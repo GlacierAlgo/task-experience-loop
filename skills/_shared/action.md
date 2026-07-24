@@ -17,7 +17,8 @@ description: "Shared norm for SOP skills. Treat each skill as an action norm wit
 
 不要穷举业务场景，不写固定交接格式，不写详细步骤。
 
-当用户给出的是远目标，而不是一个已经能落到具体动作的局部任务时，先用 `bootstrap` 把目标启动成缺口场，再选择局部 action。
+当用户给出远目标、目标空间仍不可见或缺口无法归属时，由
+`propose` 先建立边界和可执行工作面，再选择局部 action。
 
 ## 上下文补齐
 
@@ -46,20 +47,17 @@ action 结束时只判断是否需要进入另一个 action：
 - 如果需要，下一个 action 是什么，为什么。
 - 如果不需要，为什么停止。
 
-如果当前 action 发现目标空间仍不可见、缺口无法归属或后续工作面不足以判断，transition 到 `bootstrap`。`bootstrap` 启动远目标并显影工作面，不产出 roadmap、milestone 或固定任务清单。
+如果当前 action 发现目标空间仍不可见、缺口无法归属或后续工作面不足以判断，transition 到 `propose`。
 
 ## Action pointers
 
 SOP 之间允许 pointer to pointer：一个 action 可以只指出下一个更合适的 action，由下一个 action 自己读取上下文并接管，不需要当前 action 展开对方流程。
 
-- 任务完成且用户明显转向新 topic，或需要把当前 repo 变更推到 remote 时，transition 到 `sop-upload`。
+- 用户明确要求 commit、push、upload 或同步 Git remote 时，transition 到 `sop-upload`。
 - pointer 组合只表达接管关系，不表示所有 action 都必须执行；每个 action 仍按自己的适用前提决定是否真正运行。
 
-## TEL 写入闸门
+## TEL
 
-`产出到 TEL` 永远只是候选，不是默认动作。
-
-- Decision：只有能防止 3 个月后的 agent 做错选择或重复争论时才写。
-- Pattern：只有“场景 S 下做 A 有复用价值”时才写。
-- Kanban：只记录任务级状态，不记录子步骤、活动流水或一次性细节。
-- Constraints：只记录全局或跨任务约束；普通观察、临时环境状态、一次性 bug 根因不写。
+写入 TEL 不是 action 的默认收尾。出现 durable memory 候选时，使用
+`tel` skill 判断并执行；decision、pattern、noun、kanban 和 compact
+的门槛、格式与命令只由 `tel` skill 定义，其他 action skill 不复制。

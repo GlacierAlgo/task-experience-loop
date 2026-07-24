@@ -29,7 +29,7 @@ Global nouns are user-specific term resolutions and take precedence over generic
 - An interface contract was established
 
 **Do NOT record**:
-- What was done (that's kanban)
+- What was done (that's in session JSONL, Git, deployment state, or project artifacts)
 - How code works (that's in the code)
 - Research without a decision (that's notes)
 - One-off task specifics
@@ -43,6 +43,7 @@ Write to `/Users/yanghh/obs/tel/decisions/{domain}--{slug}.md`:
 domain: {domain}
 decided: {YYYY-MM-DD}
 status: active
+projects: [{project-id}]
 ---
 
 # {choice title}
@@ -67,6 +68,18 @@ status: active
 ## Evolution Trigger
 - {measurable conditions that invalidate this}
 ```
+
+Use `projects` for project-specific decisions. Project summaries and
+`tel search <project-id>` use this explicit field; they do not infer ownership
+from task-title or prose keyword overlap. Omit `projects` only for genuinely
+cross-project decisions.
+
+Decision status is either `active` or `superseded`. Do not use workflow
+artifact states such as `accepted`, `draft`, or `completed` for TEL decisions.
+When a new decision replaces an old one, merge any still-valid invariant into
+the canonical record, set the old record to `superseded`, add a
+`superseded_by` pointer, and move it to `archive/`. Do not leave both choices
+active.
 
 Domain: `architecture`, `interface`, `data`, `deployment`, `frontend`, `workflow`, `research`
 
@@ -103,20 +116,33 @@ When reusing a pattern, bump its `uses:` count.
 
 ## Task Management
 
-Update `/Users/yanghh/obs/tel/kanban.md`:
+Use the TEL CLI from the target project's working directory:
 
-```
-## Backlog
-- {task name}
-
-## Active
-- {task name} | {optional context}
-
-## Done
-- {task name} | {YYYY-MM-DD}
+```bash
+tel task add "{task name}"
+tel task start "{task name}"
+tel task done
+tel task
 ```
 
-Keep titles concise — a task name, not a description.
+The CLI derives the project from the nearest Git root, updates only that
+project's board, and regenerates project-scoped context. `add` creates a
+Backlog commitment. `start` moves an existing Backlog task to Active or creates
+it directly in Active, eliminating an add-then-activate ritual. Each project has
+at most one Active task. `done` without a title removes that Active task; pass a
+title only to remove a specific Backlog task. TEL does not retain completion
+dates or task history. Run `tel task` to read the board. Set `TEL_PROJECT` only
+when the working directory cannot identify the intended project.
+
+Do not edit `/Users/yanghh/obs/tel/kanban.md` directly during normal task work.
+It is the canonical nested storage shared by all projects; direct flat-format
+edits can corrupt project scoping. Direct edits are reserved for bounded
+administration or migrations that preserve the nested format and verify all
+project boards afterward.
+
+Keep titles concise — a task name, not a description. Kanban stores only
+unfinished commitments in Backlog or Active, not substeps, completion history,
+activity logs, tests run, or one-off details.
 
 If work implies obvious follow-up tasks, add them to Backlog (not mandatory).
 
@@ -127,7 +153,7 @@ Global nouns are user-specific referents such as machine names, server aliases, 
 Manage them through:
 ```bash
 tel noun add aliyun "SSH host aliyun, Alibaba Cloud server"
-tel noun list
+tel noun
 ```
 
 When resolving a term, use this precedence:
@@ -166,9 +192,23 @@ tel context
 
 ## Cross-Project Scope
 
-Decisions, patterns, constraints, and nouns are **global shared knowledge** — not owned by any single project. An agent working in `shadow-backtest` can and should write a decision with domain `data` even if that decision was prompted by work in `shadow-derivatives`.
+Decisions, patterns, constraints, and nouns use one **physically shared**
+knowledge directory, but that does not make every record universally
+applicable. Interpret and retrieve a decision only when its subject, project
+boundary, or explicit cross-project invariant matches the current work.
 
-**Project-scoped**: kanban tasks only. Use `tel task add/activate/done` which automatically targets the cwd project.
+Project-specific architecture and interface contracts may be recorded when they
+pass the three-month decision gate. Do not promote project activity,
+implementation progress, temporary worktree state, or one-off measurements into
+the global decision pool.
+
+When a project disappears, compact its decisions rather than keeping them active
+by default: preserve a record only if its invariant still governs a surviving
+consumer or is genuinely reusable across projects; otherwise mark it
+`superseded` and move it to `archive/`. A missing `.git` directory alone is not
+proof that a project no longer exists.
+
+**Project-scoped**: kanban tasks only. Use `tel task add/start/done`, which automatically targets the cwd project.
 
 **Global-scoped** (write from any project):
 - Decisions (`/Users/yanghh/obs/tel/decisions/`)

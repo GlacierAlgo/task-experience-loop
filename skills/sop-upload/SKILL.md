@@ -1,6 +1,6 @@
 ---
 name: "sop-upload"
-description: "Upload completed local code changes to the Git remote when a previous task is done, when the user clearly moves to another topic, or when the user asks to commit, push, upload, sync, or close out work. Triggers: sop-upload, '上传', '提交推送', '收尾上传', 'git push', 'commit push', 'sync changes'."
+description: "Commit and push scoped local changes when the user explicitly asks to upload or sync them to a Git remote. Triggers: sop-upload, '上传', '提交推送', '收尾上传', 'git push', 'commit push', 'sync changes'."
 ---
 > **Shared norms:** Before choosing or running this action, apply [sop-resolve](../_shared/resolve.md) and [sop-action](../_shared/action.md).
 
@@ -10,7 +10,7 @@ description: "Upload completed local code changes to the Git remote when a previ
 
 ## 适用前提
 
-前一个任务已经完成、验证过或被用户接受；当前工作区有需要保留的代码、文档或配置变更；用户明确要求上传，或用户明显转向另一个 topic，需要先把上一段工作收口。
+用户明确要求 commit、push、upload 或同步 Git remote，且当前工作区有对应范围内需要保留的代码、文档或配置变更。
 
 ## 需要做
 
@@ -20,7 +20,6 @@ description: "Upload completed local code changes to the Git remote when a previ
 - 写短而具体的 commit message，表达完成的行为或边界变化，不写泛化流水。
 - push 当前分支到对应 remote；push 后报告 branch、remote 和 commit hash。
 - push 失败时先判断是凭据、远端落后、冲突、网络还是 hook 问题；可局部修复则修复并重试，根因不清时 transition 到 `diagnose`。
-- 如果任务完成需要 TEL 收口，先更新 kanban/context，再把 TEL 变更纳入同一个合理提交。
 
 ## 不需要做
 
@@ -28,8 +27,5 @@ description: "Upload completed local code changes to the Git remote when a previ
 - 不用 `git add .` 代替范围判断。
 - 不提交 secrets、机器本地配置、缓存、大型生成物或用户不相关改动。
 - 不改写历史、force push、rebase 公共分支或删除远端内容，除非用户明确要求。
+- 不因任务完成或用户切换 topic 自动 commit/push。
 - 不把普通代码上传写成 TEL decision。
-
-## TEL 写入
-
-只有上传过程中发现可复用发布/协作约束，或任务完成状态需要更新 kanban/context 时才写入 TEL。

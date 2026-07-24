@@ -9,7 +9,6 @@ from pathlib import Path
 from tel import decisions, kanban, patterns, project
 
 
-MAX_RELATED_DECISIONS_PER_PROJECT = 25
 MAX_DECISIONS_PER_DOMAIN_SUMMARY = 80
 
 
@@ -75,43 +74,14 @@ def _tokenize(text: str) -> set[str]:
     return tokens
 
 
-def _decision_search_text(d: decisions.Decision) -> str:
-    return " ".join(
-        [
-            d.domain,
-            d.slug,
-            d.choice,
-            d.decision_point,
-            " ".join(d.constraints),
-            " ".join(d.implications),
-        ]
-    )
-
-
-def _task_tokens(project_id: str, board: dict[str, list[kanban.Task]]) -> set[str]:
-    pieces = [project_id]
-    for tasks in board.values():
-        pieces.extend(task.title for task in tasks)
-    return _tokenize(" ".join(pieces))
-
-
 def _related_decisions(
     project_id: str,
-    board: dict[str, list[kanban.Task]],
     all_decisions: list[decisions.Decision],
-) -> list[tuple[int, decisions.Decision]]:
-    project_tokens = _task_tokens(project_id, board)
-    if not project_tokens:
-        return []
-
-    scored = []
-    for d in all_decisions:
-        decision_tokens = _tokenize(_decision_search_text(d))
-        score = len(project_tokens & decision_tokens)
-        if score:
-            scored.append((score, d))
-    scored.sort(key=lambda item: (-item[0], item[1].domain, item[1].slug))
-    return scored[:MAX_RELATED_DECISIONS_PER_PROJECT]
+) -> list[decisions.Decision]:
+    return sorted(
+        (d for d in all_decisions if project_id in d.projects),
+        key=lambda d: (d.domain, d.slug),
+    )
 
 
 def _find_duplicate_candidates(all_decisions: list[decisions.Decision]) -> list[DuplicateCandidate]:
@@ -186,7 +156,7 @@ def _render_index(
         "## Inventory",
         f"- Active decisions: {len(all_decisions)}",
         f"- Patterns: {len(all_patterns)}",
-        f"- Kanban projects: {len(boards)}",
+        f"- Projects: {len(boards)}",
         f"- Validation issue files: {len(validation_errors)}",
         f"- Duplicate review candidates: {len(duplicate_candidates)}",
         "",
@@ -204,10 +174,9 @@ def _render_index(
             board = boards[project_id]
             backlog = len(board.get("Backlog", []))
             active = len(board.get("Active", []))
-            done = len(board.get("Done", []))
             lines.append(
                 f"- [{project_id}](projects/{project_id}.md): "
-                f"{backlog} backlog, {active} active, {done} done"
+                f"{backlog} backlog, {active} active"
             )
     else:
         lines.append("(none)")
@@ -253,14 +222,14 @@ def _render_domain_summary(domain: str, items: list[decisions.Decision]) -> str:
 def _render_project_summary(
     project_id: str,
     board: dict[str, list[kanban.Task]],
-    related: list[tuple[int, decisions.Decision]],
+    related: list[decisions.Decision],
 ) -> str:
     lines = [
         f"# {project_id}",
         "",
-        "## Board",
+        "## Current Work",
     ]
-    for column in kanban.COLUMNS:
+    for column in ("Backlog", "Active"):
         tasks = board.get(column, [])
         lines.append(f"### {column}")
         if not tasks:
@@ -272,14 +241,14 @@ def _render_project_summary(
         if len(tasks) > 40:
             lines.append(f"- ... {len(tasks) - 40} more tasks omitted")
 
-    lines.extend(["", "## Related Decisions"])
+    lines.extend(["", "## Current Decisions"])
     if related:
-        for score, d in related:
+        for d in related:
             lines.append(
-                f"- score {score}: [{d.filename}](../../decisions/{d.filename}) - {_one_line(d.choice)}"
+                f"- [{d.filename}](../../decisions/{d.filename}) - {_one_line(d.choice)}"
             )
     else:
-        lines.append("(none detected)")
+        lines.append("(none explicitly assigned)")
     lines.append("")
     return "\n".join(lines)
 
@@ -319,6 +288,9 @@ def write_summaries(project_id: str | None = None) -> OrganizationReport:
     all_decisions = decisions.query(status="active")
     all_patterns = patterns.query()
     boards = _all_boards()
+    for d in all_decisions:
+        for decision_project in d.projects:
+            boards.setdefault(decision_project, kanban.list_all(decision_project))
     requested_project = project.slugify(project_id) if project_id else project.current_project_id()
     if requested_project not in boards:
         boards[requested_project] = kanban.list_all(requested_project)
@@ -361,7 +333,7 @@ def write_summaries(project_id: str | None = None) -> OrganizationReport:
         _write(_domain_summaries_dir() / f"{domain}.md", _render_domain_summary(domain, items), report)
 
     for board_project_id, board in sorted(boards.items()):
-        related = _related_decisions(board_project_id, board, all_decisions)
+        related = _related_decisions(board_project_id, all_decisions)
         _write(
             _project_summaries_dir() / f"{board_project_id}.md",
             _render_project_summary(board_project_id, board, related),

@@ -18,7 +18,7 @@ description: "Transform all in-scope instances from pattern A to pattern B while
 - 盘点范围内所有 A 实例，标出不能机械处理的例外。
 - 保持迁移前后的行为、数据、接口或视觉不变量。
 - 用静态搜索、测试、构建、快照或 smoke 覆盖迁移结果。
-- 发现 A/B 或不变量不清时 transition 到 `propose`；发现 bug 时 transition 到 `diagnose`；发现迁移只是远目标的一部分且工作面不清时 transition 到 `bootstrap`。
+- 发现 A/B、不变量或更大工作面不清时 transition 到 `propose`；发现 bug 时 transition 到 `diagnose`。
 
 ## 不需要做
 
@@ -27,7 +27,3 @@ description: "Transform all in-scope instances from pattern A to pattern B while
 - 不借迁移删除无关代码。
 - 不在目标空间不清时把迁移范围扩大成整体改造。
 - 不把每次迁移流水写入 TEL。
-
-## TEL 写入
-
-只有迁移确立新的接口契约、数据格式、命名约定或可复用迁移方法，并通过 TEL 写入闸门时写入。

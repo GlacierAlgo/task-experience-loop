@@ -10,37 +10,21 @@ description: "Front-load uncertainty on a task at the design edge, then grill th
 
 ## 适用前提
 
-用户给出一个处于设计边缘的局部任务：可以落到具体动作，但仍有会改变实现形状的载重选择未定，不确定性高。这是承接具体 verb（propose/explore/scaffold/…）之前的入口 action。
+用户给出一个处于设计边缘的局部任务：已有具体行动，但仍有会改变实现形状、且无法从证据推出的用户选择。
 
-目标过远、工作面不可见、缺口无法枚举时，不在这里 grill，直接 transition 到 `bootstrap`。
+目标空间仍不可见或需要先建立边界时，不在这里反复提问，transition 到 `propose`。
 
 ## 需要做
 
-前置不确定性、迭代提问、区分并落盘选择，三件事：
+前置不确定性、迭代提问、沉淀 durable 选择，三件事：
 
-### 1. 前置不确定性
-
-- 拉历史 TEL：运行 `tel context --stdout` 获取当前项目上下文，对目标关键词跑 `tel search`，看 `tel noun list`，需要复用做法时直接 grep `patterns/`，找出触及本任务的既有 durable 选择与可复用做法。
+- 使用 `tel` skill 拉取当前项目的 durable context，避免重问已经裁决的问题。
 - 联网核实外部事实：会改变接口或存储形状的 API、依赖、政策、时效性行为，用 web search 先验证再设计。
 - 沿四个轴显影不确定性场：边界（谁拥有状态/暴露能力）、外部事实（须核实才能动手的口径）、用户裁决（无法从代码/TEL/测试推出的偏好或不可逆选择）、持久性（哪些结果值得写 TEL，哪些只是任务笔记）。
-
-### 2. 迭代 grill
-
 - 提问必须现场从真实目标 + 已拉到的历史 + web 结果生成，针对具体对象，不用模板问句。
 - 小批量提问（一轮 1-3 个可裁决点）→ 用户回答 → 收窄不确定性场 → 生成下一轮 → 直到设计上下文密到可以自治执行。
 - 每轮只问真正会改变范围、口径或风险的点；能 derive 或 verify 的不问。
-
-### 3. 落盘选择
-
-Codex 通常不进入 query-user 模式，grill 是重要选择通过讨论定下来的主要窗口。窗口关闭前必须把 durable 选择写进 TEL，否则讨论蒸发。
-
-- 分离 durable 选择与一次性任务决策：前者写成 decision，后者只进 kanban 或任务笔记。
-- 判据：只有能防止 3 个月后的 agent 做错选择或重复争论的重要选择才写；一次性任务决策、原始调研笔记、代码里已显然的实现细节不写。
-- 捕获路径（直接写文件，无交互式命令）：
-  1. 写 `/Users/yanghh/obs/tel/decisions/{domain}--{slug}.md`，`domain` 取 `architecture|interface|data|deployment|frontend|workflow|research`，`slug` 用短 kebab-case。
-  2. 用既有六段结构：frontmatter（`domain` / `decided: {YYYY-MM-DD}` / `status: active`）+ `# 选择标题` + `## Decision Point` + `## Option Space` + `## Choice` + `## Constraints & Rationale` + `## Implications` + `## Evolution Trigger`。标题写“选了什么”，不写“在决定什么”。
-  3. 写完跑 `tel context` 重新生成 `loop-context.md`。
-- 已有相关 decision 时，判断本次是 supersede 还是 apply：supersede 才新写或改状态，apply 不重复记。
+- 窗口关闭前，使用 `tel` skill 判断并记录已经落定的 durable 选择；一次性选择不写。
 
 ## 不需要做
 
@@ -53,9 +37,4 @@ Codex 通常不进入 query-user 模式，grill 是重要选择通过讨论定�
 ## Action transition
 
 - 设计上下文够密后 transition 到 `propose` 或具体 verb 执行。
-- 目标过远、工作面不可见、缺口无法归属时 transition 到 `bootstrap`。
-- 任务完成且用户转向新 topic 或需推送 repo 变更时 transition 到 `upload`。
-
-## TEL 写入
-
-只有 grill 过程产生可复用设计选择、全局约束或明确任务级后续项，并通过 TEL 写入闸门时写入。
+- 目标空间不可见或缺口无法归属时 transition 到 `propose`。

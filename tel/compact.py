@@ -9,7 +9,6 @@ from tel import decisions, organize, patterns, project
 
 MAX_PROPOSALS_PER_KIND = 20
 STALE_WORD_HINTS = ("deprecated", "obsolete", "temporary")
-STALE_TEXT_HINTS = ("临时", "过时")
 
 
 @dataclass(frozen=True)
@@ -84,10 +83,12 @@ def _validation_proposals() -> list[CompactProposal]:
 def _stale_hint_proposals(all_decisions: list[decisions.Decision]) -> list[CompactProposal]:
     proposals = []
     for d in all_decisions:
-        haystack = " ".join([d.slug, d.choice, d.decision_point]).lower()
-        words = _normal_words(haystack)
+        # Lifecycle words in decision prose are usually about temporary files,
+        # ephemeral runtime values, or rejected obsolete options. Only an
+        # explicit lifecycle marker in the record identity is strong enough to
+        # create a compact review candidate without repository evidence.
+        words = _normal_words(d.slug)
         matched = [hint for hint in STALE_WORD_HINTS if hint in words]
-        matched.extend(hint for hint in STALE_TEXT_HINTS if hint in haystack)
         if not matched:
             continue
         proposals.append(
@@ -95,7 +96,7 @@ def _stale_hint_proposals(all_decisions: list[decisions.Decision]) -> list[Compa
                 action="verify_stale",
                 title="Verify potentially stale decision",
                 records=[f"decisions/{d.filename}"],
-                reason=f"Record contains stale/compatibility language: {', '.join(matched)}.",
+                reason=f"Record identity contains lifecycle language: {', '.join(matched)}.",
                 evidence=[
                     "An agent should compare this record with the current repository before proposing deprecation."
                 ],

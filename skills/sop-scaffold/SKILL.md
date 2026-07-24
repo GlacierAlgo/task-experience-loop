@@ -18,7 +18,7 @@ description: "Create the minimal runnable physical anchor for a new project, pac
 - 从 TEL 和当前 repo 推导语言、工具链和结构深度。
 - 选择能运行的最浅结构。
 - 生成有实际内容的文件，避免空 placeholder。
-- 目标过远且缺少工作面时 transition 到 `bootstrap`；骨架可运行后 transition 到后续 action。
+- 目标边界或工作面不清时 transition 到 `propose`；骨架可运行后 transition 到后续 action。
 
 ## 不需要做
 
@@ -26,9 +26,5 @@ description: "Create the minimal runnable physical anchor for a new project, pac
 - 不把一个单文件内聚脚本升级成项目骨架。
 - 不把某个项目的工具链当作全局默认。
 - 不用脚手架替代目标展开。
-- 不承接远目标启动；远目标先进入 `bootstrap`。
+- 不承接目标展开；先由 `propose` 建立边界和工作面。
 - 不在 scaffold 阶段预设未来复杂层级。
-
-## TEL 写入
-
-Scaffold 本身通常只记录任务状态。只有产生可复用结构决策、工具链约定或新模块边界，并通过 TEL 写入闸门时写入。
