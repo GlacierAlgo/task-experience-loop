@@ -1,0 +1,37 @@
+{
+  "name": "task-experience-loop",
+  "version": "0.1.0",
+  "description": "Keep project-scoped tasks, decisions, and reusable agent experience in local Markdown.",
+  "author": {
+    "name": "GlacierAlgo",
+    "url": "https://github.com/GlacierAlgo"
+  },
+  "homepage": "https://github.com/GlacierAlgo/task-experience-loop",
+  "repository": "https://github.com/GlacierAlgo/task-experience-loop",
+  "keywords": [
+    "agent-memory",
+    "codex",
+    "decisions",
+    "long-running-work",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Task Experience Loop",
+    "shortDescription": "Local, auditable memory for long-running agent work",
+    "longDescription": "Task Experience Loop gives Codex a local memory layer for project-scoped tasks, durable decisions, and reusable working patterns. The plugin bundles the TEL protocol and action-oriented SOP skills while keeping the Python CLI and user data separate.",
+    "developerName": "GlacierAlgo",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/GlacierAlgo/task-experience-loop",
+    "defaultPrompt": [
+      "Use TEL to load this project's context and continue the active task.",
+      "Record this decision in TEL if it will matter in future work.",
+      "Review my TEL memory pool and propose safe cleanup."
+    ]
+  }
+}

@@ -124,10 +124,11 @@ class ProjectScopedKanbanTests(unittest.TestCase):
         self.assertIn("TEL -> Task Experience Loop", noun_read.output)
         self.assertNotEqual(runner.invoke(cli, ["noun", "list"]).exit_code, 0)
 
-    def test_empty_tel_dir_uses_default_location(self) -> None:
+    def test_empty_tel_dir_uses_home_dot_tel(self) -> None:
         os.environ["TEL_DIR"] = ""
 
-        self.assertEqual(project.tel_dir(), project.DEFAULT_TEL_DIR)
+        self.assertEqual(project.DEFAULT_TEL_DIR, Path.home() / ".tel")
+        self.assertEqual(project.tel_dir(), Path.home() / ".tel")
 
     def test_tel_dir_environment_override_wins(self) -> None:
         override = Path(self.tempdir.name, "custom-tel")

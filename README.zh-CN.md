@@ -4,7 +4,7 @@
 
 [English](README.md) | 简体中文
 
-Task Experience Loop（TEL）是给经常和 Codex、Claude Code 一起做长期项目的人准备的。它把任务、重要决定和真正有用的做法记在本地 Markdown 文件里。换一个会话后，Agent 仍然知道之前做过哪些取舍，不用每次都从头解释。
+Task Experience Loop（TEL）是给经常和 Codex 一起做长期项目的人准备的。它把任务、重要决定和真正有用的做法记在本地 Markdown 文件里。换一个会话后，Agent 仍然知道之前做过哪些取舍，不用每次都从头解释。
 
 TEL 不会把每段对话都存下来，也不负责调度 Agent。它只记三类东西：还没做完的事、以后仍要遵守的决定，以及已经证明好用的办法。
 
@@ -30,33 +30,46 @@ TEL 把这些内容放在你自己的本地目录里，再根据当前 Git 项�
 - **定期整理，但不擅自删除**：`tel compact` 只提出建议，改动原始记录前仍然要经过用户同意。
 - **提供一组常用工作 skills**：探索、排错、评审、出方案、迁移和交付都有对应入口。
 
-## 先跑起来
+## 安装
 
-当前版本面向 macOS / Linux，需要 Python 3.12 或更高版本。
+TEL 分成两部分：Python CLI 管理本地数据，Codex Plugin 提供 TEL 协议和一组行动型 SOP skills。两部分需要分别安装。
+
+### 1. 安装 CLI
+
+TEL 需要 Python 3.12 或更高版本。使用 `uv`：
+
+```bash
+uv tool install git+https://github.com/GlacierAlgo/task-experience-loop.git
+```
+
+也可以从源码安装：
 
 ```bash
 git clone https://github.com/GlacierAlgo/task-experience-loop.git
 cd task-experience-loop
-
 python3.12 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
-
-export TEL_DIR="$HOME/.tel"
-mkdir -p "$TEL_DIR"
+python -m pip install .
 ```
 
-当前代码里的默认数据路径还是开发者本机路径，所以其他用户现在需要明确设置 `TEL_DIR`。TEL 的数据都会放在这里，不需要数据库，也不会依赖外部服务。
-
-安装 Codex 与 Claude Code skills：
+TEL 默认把数据保存在 `~/.tel`。只有想换位置时才需要设置 `TEL_DIR`：
 
 ```bash
-./install.sh
+export TEL_DIR="$HOME/path/to/tel-data"
 ```
 
-安装脚本会把仓库中的 skills 软链接到 `~/.codex/skills/` 和 `~/.claude/skills/`。这种方式适合本地试用和开发：仓库里的 skill 一改，两边会立刻生效。
+### 2. 安装 Codex Plugin
 
-安装后不会自动在每次会话开始时读取 TEL。你可以显式调用 `$tel`，也可以在自己的 `AGENTS.md` 中加入 session-start 规则。
+把这个仓库加入 Codex marketplace，然后安装插件：
+
+```bash
+codex plugin marketplace add GlacierAlgo/task-experience-loop
+codex plugin add task-experience-loop@task-experience-loop
+```
+
+安装完成后，新建一个 Codex task，让 Codex 重新发现插件里的 skills。
+
+插件不会修改全局 `AGENTS.md`，不会创建指向开发目录的软链接，也不会默认开启 session-start 行为。平时可以显式调用 `$tel`；确实希望每个项目都自动使用 TEL 时，再把[可选的 always-on profile](plugins/task-experience-loop/profiles/always-on/AGENTS.md)复制到个人全局指令中。
 
 ## 花一分钟试一下
 
@@ -93,10 +106,10 @@ tel compact                     # 生成经验池整理建议
 
 ## 文件放在哪里
 
-`TEL_DIR` 中的主要内容：
+默认数据目录 `~/.tel` 中的主要内容如下。设置了 `TEL_DIR` 时，整个目录会换到指定位置。
 
 ```text
-TEL_DIR/
+~/.tel/
 ├── kanban.md              # 所有项目尚未完成的承诺
 ├── constraints.md         # 跨项目约束
 ├── nouns.md               # 用户自己的全局名词
@@ -148,6 +161,6 @@ TEL 不试图成为：
 
 ## 现在做到哪一步
 
-TEL 目前是 `0.1.0`，已经可以在本地使用。CLI、分项目任务板、决策和模式索引、上下文生成、全局名词以及 `compact` 都已经能跑。
+TEL 目前是 `0.1.0`。CLI、分项目任务板、决策和模式索引、上下文生成、全局名词、`compact`，以及标准 Codex Plugin 都已经可以使用。
 
-标准 Codex Plugin 还在准备中。正式 release 之前，更适合先在个人环境里试用，并把 `TEL_DIR` 放在一个会定期备份的本地目录中。
+现在仍是早期版本，更适合先在个人环境里试用。TEL 的数据都是普通 Markdown，建议像其他重要项目资料一样定期备份 `~/.tel`。

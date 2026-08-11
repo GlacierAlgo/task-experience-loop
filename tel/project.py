@@ -4,7 +4,7 @@ import os
 import re
 from pathlib import Path
 
-DEFAULT_TEL_DIR = Path("/Users/yanghh/obs/tel")
+DEFAULT_TEL_DIR = Path.home() / ".tel"
 
 
 def tel_dir() -> Path:
