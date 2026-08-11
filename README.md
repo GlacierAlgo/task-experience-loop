@@ -1,4 +1,8 @@
+*Give AI agents a way to remember why decisions were made and which approaches actually worked.*
+
 # Task Experience Loop
+
+English | [简体中文](README.zh-CN.md)
 
 Task Experience Loop (TEL) is a lightweight memory layer for long-running agent work.
 
