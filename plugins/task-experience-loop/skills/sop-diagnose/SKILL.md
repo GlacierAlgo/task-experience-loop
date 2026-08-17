@@ -18,7 +18,7 @@ description: "Trace a concrete symptom to root cause, repair it when in scope, a
 - 追到为什么会进入错误状态，而不是只定位哪里报错。
 - 在范围内做最小修复，并验证原症状消失。
 - 保持既有设计意图，不把有意行为当作 bug 修掉。
-- 根因超出 bug 修复边界时 transition 到 `migrate`、`reduce`、`propose` 或 `review`。
+- 根因超出当前修复合同时停止，报告证据和未闭合边界，不在当前 action 内扩大范围。
 
 ## 不需要做
 

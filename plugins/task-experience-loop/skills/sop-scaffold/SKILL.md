@@ -18,7 +18,7 @@ description: "Create the minimal runnable physical anchor for a new project, pac
 - 从 TEL 和当前 repo 推导语言、工具链和结构深度。
 - 选择能运行的最浅结构。
 - 生成有实际内容的文件，避免空 placeholder。
-- 目标边界或工作面不清时 transition 到 `propose`；骨架可运行后 transition 到后续 action。
+- 目标责任、位置或验收不清时在创建文件前停止；骨架可运行后验证并结束当前 action。
 
 ## 不需要做
 
@@ -26,5 +26,5 @@ description: "Create the minimal runnable physical anchor for a new project, pac
 - 不把一个单文件内聚脚本升级成项目骨架。
 - 不把某个项目的工具链当作全局默认。
 - 不用脚手架替代目标展开。
-- 不承接目标展开；先由 `propose` 建立边界和工作面。
+- 不承接目标展开；本 action 只实现已经明确的物理落脚点。
 - 不在 scaffold 阶段预设未来复杂层级。

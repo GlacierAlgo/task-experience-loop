@@ -1,6 +1,6 @@
 ---
 name: "sop-action"
-description: "Shared norm for SOP skills. Treat each skill as an action norm with automatic context acquisition, objective expansion, lightweight action transition, and TEL memory gates. Not invoked directly by user."
+description: "Shared norm and role-directed router for SOP skills. Treat each skill as a bounded action with automatic context acquisition, explicit applicability, local verification, and TEL memory gates. Not invoked directly by user."
 ---
 
 # sop-action
@@ -16,9 +16,6 @@ description: "Shared norm for SOP skills. Treat each skill as an action norm wit
 - 不需要做：这个 action 不承担的责任。
 
 不要穷举业务场景，不写固定交接格式，不写详细步骤。
-
-当用户给出远目标、目标空间仍不可见或缺口无法归属时，由
-`propose` 先建立边界和可执行工作面，再选择局部 action。
 
 ## 上下文补齐
 
@@ -38,23 +35,25 @@ Agent 局部已经具备自治能力。缺信息时按证据距离补齐：
 - **verify**：能用命令、测试、浏览器、日志、静态搜索验证，就直接验证。
 - **ask**：只有 derive 和 verify 都不足，且该点会改变范围、口径或风险时才问用户。
 
-## Action transition
+## Action roles
 
-action 结束时只判断是否需要进入另一个 action：
+SOP 是按责任分层的 action 集合，不是互相跳转的平面状态图：
 
-- 当前 action 是否完成。
-- 是否需要进入另一个 action。
-- 如果需要，下一个 action 是什么，为什么。
-- 如果不需要，为什么停止。
+- **Framing**：`propose`、`explore`，负责显影目标空间或局部未知。
+- **Readiness gate**：`grill`，负责在已知工作面上闭合执行合同。
+- **Lens / assessment**：`layout`、`review`，负责前置一个专门判断面或只读评估。
+- **Mutation**：`diagnose`、`conform`、`migrate`、`reduce`、`scaffold`，负责改变范围内状态并验证自身不变量。
+- **Release**：`upload`、`ship`，负责把已就绪产物送入 Git remote 或目标运行环境。
 
-如果当前 action 发现目标空间仍不可见、缺口无法归属或后续工作面不足以判断，transition 到 `propose`。
+默认责任方向是 framing / gate → mutation → release。`layout` 可以在前端 mutation 前提供信息架构判断；`review` 以 findings 结束，不隐含修复。角色表示责任边界，不表示每个任务都要依次执行每层。
 
-## Action pointers
+## Action routing
 
-SOP 之间允许 pointer to pointer：一个 action 可以只指出下一个更合适的 action，由下一个 action 自己读取上下文并接管，不需要当前 action 展开对方流程。
-
-- 用户明确要求 commit、push、upload 或同步 Git remote 时，transition 到 `sop-upload`。
-- pointer 组合只表达接管关系，不表示所有 action 都必须执行；每个 action 仍按自己的适用前提决定是否真正运行。
+- 共享 router 根据用户当前要求、已有合同和最新证据选择 action；单个 skill 不枚举其他 skill 作为下一跳。
+- action 的适用前提不成立时，在修改前停止并暴露缺少的事实、边界或裁决，再由 router 重新选择；不要在当前 action 内扩大职责。
+- mutation 和 release action 自己完成范围内验证，并对失败做有界分类；修复循环不靠互相 transition 表达。
+- action 完成后先结束当前责任。如果用户要求继续，或结果暴露了独立目标，基于最新证据做一次新的 action 选择；不要把它编码成返回边。
+- 用户明确要求 commit、push、upload 或同步 Git remote 时，只有 release 前提成立才选择对应 action；部署同理，不把尚未就绪的实现问题夹带进 release。
 
 ## TEL
 

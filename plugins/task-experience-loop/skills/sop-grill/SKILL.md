@@ -1,6 +1,6 @@
 ---
 name: "sop-grill"
-description: "Front-load uncertainty at a design edge: surface boundary, external-fact, user-ruling, and persistence unknowns; resolve them into an executable contract covering deliverable, scope, default assumptions, and completion criteria; then conditionally preserve durable choices in TEL. Use before implementation when that contract is materially under-specified. Triggers: sop-grill, grill-me, '盘一盘', 'front-load', '问我', '帮我把不确定性梳理清楚', '前置不确定性', '决策前先想清楚'."
+description: "Front-load uncertainty on a known local work surface: resolve boundary, external-fact, user-ruling, and persistence unknowns into an executable contract, then conditionally preserve durable choices in TEL. Use before implementation when that contract is materially under-specified. Triggers: sop-grill, grill-me, '盘一盘', 'front-load', '问我', '帮我把不确定性梳理清楚', '前置不确定性', '决策前先想清楚'."
 ---
 > **Shared norms:** Before choosing or running this action, apply [sop-resolve](../../_shared/resolve.md) and [sop-action](../../_shared/action.md).
 
@@ -10,9 +10,9 @@ description: "Front-load uncertainty at a design edge: surface boundary, externa
 
 ## 适用前提
 
-用户给出一个处于设计边缘的局部任务：已有具体行动，但仍有会改变实现形状、且无法从证据推出的用户选择；或 agent 即将实现，却无法准确复述交付物、范围、默认假设、完成标准中的至少一项。
+用户给出一个已知局部工作面或具体行动，但仍有会改变实现形状、且无法从证据推出的用户选择；或 agent 即将实现，却无法准确复述交付物、范围、默认假设、完成标准中的至少一项。
 
-目标空间仍不可见或需要先建立边界时，不在这里反复提问，transition 到 `propose`。
+如果目标或工作面本身仍不可识别，这个 action 不适用；停止提问并把缺口交回共享 router。
 
 ## 需要做
 
@@ -36,7 +36,7 @@ description: "Front-load uncertainty at a design edge: surface boundary, externa
   3. **默认假设**：需求未写明处按什么现有约束或最小解释推进。
   4. **完成标准**：哪些可观察证据代表通过，哪些结果代表未通过。
 - 每个闭合轴出现缺口时，追溯到一个或多个发现轴，选择 derive、verify 或 ask；不要把八个轴展开成八道固定问题。
-- transition 到实现 action 前，用四条简短、可见的复述分别声明交付物、范围、默认假设和完成标准。用户纠正任一载重项时，定位被推翻的发现轴，原合同失效，继续 grill。
+- 进入实现前，用四条简短、可见的复述分别声明交付物、范围、默认假设和完成标准。用户纠正任一载重项时，定位被推翻的发现轴，原合同失效，继续 grill。
 - 任一闭合轴仍有会改变实现形状、范围或验收的未知项时，禁止写代码或修改目标产物；四轴充分且无冲突时，不另设确认仪式，直接进入执行。
 
 ### 3. Maybe memorize
@@ -56,8 +56,8 @@ description: "Front-load uncertainty at a design edge: surface boundary, externa
 - 不把一次性任务决策、原始调研笔记或代码里已显然的实现细节写进 TEL。
 - 不替代具体 verb 的局部判断；grill 只负责把上下文备足。
 
-## Action transition
+## 结束条件
 
-- 四轴执行合同充分并完成可见复述后，transition 到 `propose` 或具体 verb 执行。
-- 任一载重项仍不充分时留在 grill，不进入实现。
-- 目标空间不可见或缺口无法归属时 transition 到 `propose`。
+- 四轴执行合同充分并完成可见复述后，结束 gate，把合同交回共享 router 选择执行 action。
+- 任一载重项仍不充分时继续消解未知，不进入实现。
+- 目标空间或工作面不可识别时，本 action 不适用，停止并暴露缺口。

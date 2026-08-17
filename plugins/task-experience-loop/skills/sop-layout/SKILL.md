@@ -1,6 +1,6 @@
 ---
 name: "sop-layout"
-description: "Front-load information architecture when a frontend task changes page structure or spatial hierarchy. Triggers: sop-layout, 'layout', '布局', '页面结构', '前端骨架'. Auto-invoked for material layout or information-architecture changes, not routine frontend code."
+description: "Apply an information-architecture lens before a frontend mutation that materially changes page structure or spatial hierarchy. Triggers: sop-layout, 'layout', '布局', '页面结构', '前端骨架'. Auto-invoked for material layout or information-architecture changes, not routine frontend code."
 ---
 > **Shared norms:** Before choosing or running this action, apply [sop-resolve](../../_shared/resolve.md) and [sop-action](../../_shared/action.md).
 
@@ -25,10 +25,10 @@ description: "Front-load information architecture when a frontend task changes p
 
 - 不输出固定五级模板或为简单任务制造确认步骤。
 - 不在信息架构判断里提前写具体 CSS/Tailwind 类名。
-- 不替代具体 verb 的执行（scaffold、propose 等）；此 skill 只负责把信息架构前置。
+- 不替代改变页面状态的具体 action；此 skill 只负责把信息架构判断前置。
 - 不把一次性布局推导写成长文档或 durable memory。
 
-## Action transition
+## 结束条件
 
-- 信息架构清楚后进入具体执行 action。
-- 仍有用户裁决时 transition 到 `grill`；目标边界仍不可见时 transition 到 `propose`。
+- 信息架构清楚后输出判断结果并结束当前 lens，由共享 router 选择执行 action。
+- 仍有载重用户裁决或目标边界不可见时停止，不在 lens 内猜测或扩大范围。

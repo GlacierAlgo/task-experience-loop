@@ -1,6 +1,6 @@
 ---
 name: "sop-review"
-description: "Assess a changeset, artifact, or system state against explicit criteria and produce findings. Triggers: sop-review, 'review', '审查', '评审', '看看这个有没有问题', 'check this'."
+description: "Read-only assessment of a known object against explicit criteria, ending in evidence-backed findings. Triggers: sop-review, 'review', '审查', '评审', '看看这个有没有问题', 'check this'."
 ---
 > **Shared norms:** Before choosing or running this action, apply [sop-resolve](../../_shared/resolve.md) and [sop-action](../../_shared/action.md).
 
@@ -10,7 +10,7 @@ description: "Assess a changeset, artifact, or system state against explicit cri
 
 ## 适用前提
 
-用户要判断 PR、diff、文件、目录、设计、产物或系统状态，且当前不要求直接修。
+用户要判断一个已知 PR、diff、文件、目录、设计、产物或系统状态，已有可用评审标准，且当前不要求直接修。
 
 ## 需要做
 
@@ -18,7 +18,7 @@ description: "Assess a changeset, artifact, or system state against explicit cri
 - 用用户要求、TEL constraints、decisions、项目约定和证据支撑 findings。
 - 区分事实、风险、假设和个人偏好。
 - 按用户需要输出 verdict、问题盘点、风险清单或设计评审。
-- 发现需要修改时 transition 到 `diagnose`、`reduce`、`migrate`、`conform` 或 `propose`。
+- 以 findings 结束当前只读 action；用户随后要求修改时，由共享 router 把它作为新行动选择。
 
 ## 不需要做
 

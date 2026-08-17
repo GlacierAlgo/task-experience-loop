@@ -1,6 +1,6 @@
 {
   "name": "task-experience-loop",
-  "version": "0.1.0+codex.20260817030147",
+  "version": "0.1.0+codex.20260817073806",
   "description": "Keep project-scoped tasks, decisions, and reusable agent experience in local Markdown.",
   "author": {
     "name": "GlacierAlgo",

@@ -19,7 +19,7 @@ description: "Commit and push scoped local changes when the user explicitly asks
 - 提交前确认已有验证结果仍成立；如果没有验证且风险不低，补跑最接近的测试、lint、构建或静态检查。
 - 写短而具体的 commit message，表达完成的行为或边界变化，不写泛化流水。
 - push 当前分支到对应 remote；push 后报告 branch、remote 和 commit hash。
-- push 失败时先判断是凭据、远端落后、冲突、网络还是 hook 问题；可局部修复则修复并重试，根因不清时 transition 到 `diagnose`。
+- push 失败时先判断是凭据、远端落后、冲突、网络还是 hook 问题；只处理 release 范围内且可逆的问题，否则停止并报告证据，不改写历史。
 
 ## 不需要做
 

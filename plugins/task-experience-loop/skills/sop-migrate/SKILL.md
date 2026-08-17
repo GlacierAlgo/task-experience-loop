@@ -18,7 +18,7 @@ description: "Transform all in-scope instances from pattern A to pattern B while
 - 盘点范围内所有 A 实例，标出不能机械处理的例外。
 - 保持迁移前后的行为、数据、接口或视觉不变量。
 - 用静态搜索、测试、构建、快照或 smoke 覆盖迁移结果。
-- 发现 A/B、不变量或更大工作面不清时 transition 到 `propose`；发现 bug 时 transition 到 `diagnose`。
+- A、B、范围或不变量不清时在修改前停止；迁移外缺陷作为独立目标报告，不在当前 action 内夹带修复。
 
 ## 不需要做
 
