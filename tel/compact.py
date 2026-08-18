@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import re
+from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from tel import decisions, organize, patterns, project
+from tel import decisions, patterns, project
 
 
 MAX_PROPOSALS_PER_KIND = 20
@@ -32,6 +33,13 @@ class CompactReport:
         return len(self.proposals)
 
 
+@dataclass(frozen=True)
+class DuplicateCandidate:
+    first: str
+    second: str
+    reason: str
+
+
 def compact_review_path() -> Path:
     return project.tel_dir() / "summaries" / "compact.md"
 
@@ -50,9 +58,55 @@ def _text_len(*values: str) -> int:
     return len(re.findall(r"[A-Za-z0-9_]+|[\u4e00-\u9fff]", text))
 
 
+def _decision_duplicate_candidates(
+    all_decisions: list[decisions.Decision],
+) -> list[DuplicateCandidate]:
+    candidates: list[DuplicateCandidate] = []
+    seen_pairs: set[tuple[str, str]] = set()
+
+    def add(left: decisions.Decision, right: decisions.Decision, reason: str) -> None:
+        pair = tuple(sorted((left.filename, right.filename)))
+        if pair in seen_pairs:
+            return
+        seen_pairs.add(pair)
+        candidates.append(DuplicateCandidate(pair[0], pair[1], reason))
+
+    by_exact_choice: dict[str, list[decisions.Decision]] = defaultdict(list)
+    by_slug: dict[str, list[decisions.Decision]] = defaultdict(list)
+    by_domain: dict[str, list[decisions.Decision]] = defaultdict(list)
+    for decision in all_decisions:
+        choice_key = re.sub(r"\s+", " ", decision.choice.lower()).strip()
+        if len(choice_key) >= 24:
+            by_exact_choice[choice_key].append(decision)
+        by_slug[decision.slug].append(decision)
+        by_domain[decision.domain].append(decision)
+
+    for groups, reason in (
+        (by_exact_choice.values(), "same normalized choice text"),
+        (by_slug.values(), "same slug across domains"),
+    ):
+        for group in groups:
+            for left, right in zip(group, group[1:]):
+                add(left, right, reason)
+
+    for group in by_domain.values():
+        tokenized = [(decision, _normal_words(decision.choice)) for decision in group]
+        for index, (left, left_tokens) in enumerate(tokenized):
+            if len(left_tokens) < 5:
+                continue
+            for right, right_tokens in tokenized[index + 1 :]:
+                if len(right_tokens) < 5:
+                    continue
+                overlap = left_tokens & right_tokens
+                union = left_tokens | right_tokens
+                if len(overlap) >= 5 and len(overlap) / len(union) >= 0.62:
+                    add(left, right, "high choice-token overlap")
+    return candidates
+
+
 def _duplicate_decision_proposals(all_decisions: list[decisions.Decision]) -> list[CompactProposal]:
     proposals = []
-    for candidate in organize._find_duplicate_candidates(all_decisions)[:MAX_PROPOSALS_PER_KIND]:
+    for candidate in _decision_duplicate_candidates(all_decisions)[:MAX_PROPOSALS_PER_KIND]:
         proposals.append(
             CompactProposal(
                 action="merge_or_keep",

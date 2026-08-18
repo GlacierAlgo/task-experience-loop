@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 
 import frontmatter
@@ -60,54 +59,6 @@ def _extract_section(content: str, header: str) -> str:
     return "\n".join(result)
 
 
-def _render(p: Pattern) -> str:
-    meta = frontmatter.Post(
-        content="",
-        handler=None,
-        domain=p.domain,
-        created=p.created or date.today().isoformat(),
-        uses=p.uses,
-    )
-    body = f"""# {p.slug}
-
-## Situation
-{p.situation}
-
-## Action
-{p.action}
-
-## Outcome
-{p.outcome}
-"""
-    meta.content = body
-    return frontmatter.dumps(meta) + "\n"
-
-
-def record(slug: str, situation: str, action: str, outcome: str, domain: str = "") -> Pattern:
-    directory = patterns_dir()
-    directory.mkdir(parents=True, exist_ok=True)
-    p = Pattern(
-        slug=slug,
-        situation=situation,
-        action=action,
-        outcome=outcome,
-        domain=domain,
-        created=date.today().isoformat(),
-    )
-    path = directory / p.filename
-    path.write_text(_render(p))
-    return p
-
-
-def bump_use(slug: str):
-    path = patterns_dir() / f"{slug}.md"
-    if not path.exists():
-        return
-    p = _load(path)
-    p.uses += 1
-    path.write_text(_render(p))
-
-
 def query(domain: str | None = None) -> list[Pattern]:
     directory = patterns_dir()
     if not directory.exists():
@@ -120,14 +71,4 @@ def query(domain: str | None = None) -> list[Pattern]:
         if domain and p.domain != domain:
             continue
         results.append(p)
-    return results
-
-
-def search(keyword: str) -> list[Pattern]:
-    keyword_lower = keyword.lower()
-    results = []
-    for p in query():
-        searchable = f"{p.slug} {p.situation} {p.action} {p.outcome} {p.domain}".lower()
-        if keyword_lower in searchable:
-            results.append(p)
     return results

@@ -9,6 +9,7 @@ from click.testing import CliRunner
 
 from tel import compact, context, decisions, nouns
 from tel.cli import cli
+from tests.support import write_decision
 
 
 class NounsAndCompactTests(unittest.TestCase):
@@ -42,7 +43,7 @@ class NounsAndCompactTests(unittest.TestCase):
 
     def test_compact_writes_review_without_changing_source_records(self) -> None:
         for slug in ("runtime-a", "runtime-b"):
-            decisions.record(
+            write_decision(
                 domain="architecture",
                 slug=slug,
                 decision_point="Where should runtime state live?",
@@ -73,7 +74,7 @@ class NounsAndCompactTests(unittest.TestCase):
         self.assertTrue(Path(self.tempdir.name, "summaries", "compact.md").exists())
 
     def test_compact_does_not_treat_compatibility_terms_as_stale(self) -> None:
-        decisions.record(
+        write_decision(
             domain="interface",
             slug="stable-compatibility-boundary",
             decision_point="How should compatibility be handled?",
@@ -82,7 +83,7 @@ class NounsAndCompactTests(unittest.TestCase):
             constraints=["Compatibility is an active public interface constraint."],
             implications=["Future changes must preserve the compatibility envelope."],
         )
-        decisions.record(
+        write_decision(
             domain="interface",
             slug="temporary-debug-route",
             decision_point="How should a temporary route be handled?",

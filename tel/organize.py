@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import date
@@ -13,13 +12,6 @@ MAX_DECISIONS_PER_DOMAIN_SUMMARY = 80
 
 
 @dataclass
-class DuplicateCandidate:
-    first: str
-    second: str
-    reason: str
-
-
-@dataclass
 class OrganizationReport:
     summary_dir: Path
     written_files: list[Path] = field(default_factory=list)
@@ -27,8 +19,6 @@ class OrganizationReport:
     decision_count: int = 0
     pattern_count: int = 0
     project_count: int = 0
-    validation_error_count: int = 0
-    duplicate_candidate_count: int = 0
 
 
 def summaries_dir() -> Path:
@@ -65,15 +55,6 @@ def _one_line(text: str, limit: int = 180) -> str:
     return value[: limit - 3].rstrip() + "..."
 
 
-def _tokenize(text: str) -> set[str]:
-    tokens = set()
-    normalized = text.lower().replace("_", " ").replace("-", " ")
-    for token in re.findall(r"[a-z0-9]{3,}|[\u4e00-\u9fff]{2,}", normalized):
-        if token not in {"the", "and", "for", "with", "from", "that", "this"}:
-            tokens.add(token)
-    return tokens
-
-
 def _related_decisions(
     project_id: str,
     all_decisions: list[decisions.Decision],
@@ -84,56 +65,6 @@ def _related_decisions(
     )
 
 
-def _find_duplicate_candidates(all_decisions: list[decisions.Decision]) -> list[DuplicateCandidate]:
-    candidates: list[DuplicateCandidate] = []
-    by_exact_choice: dict[str, list[decisions.Decision]] = defaultdict(list)
-    by_slug: dict[str, list[decisions.Decision]] = defaultdict(list)
-
-    for d in all_decisions:
-        choice_key = re.sub(r"\s+", " ", d.choice.lower()).strip()
-        if len(choice_key) >= 24:
-            by_exact_choice[choice_key].append(d)
-        by_slug[d.slug].append(d)
-
-    for group in by_exact_choice.values():
-        if len(group) < 2:
-            continue
-        for first, second in zip(group, group[1:]):
-            candidates.append(
-                DuplicateCandidate(first.filename, second.filename, "same normalized choice text")
-            )
-
-    for group in by_slug.values():
-        if len(group) < 2:
-            continue
-        for first, second in zip(group, group[1:]):
-            candidates.append(DuplicateCandidate(first.filename, second.filename, "same slug across domains"))
-
-    by_domain: dict[str, list[decisions.Decision]] = defaultdict(list)
-    for d in all_decisions:
-        by_domain[d.domain].append(d)
-
-    seen_pairs = {(c.first, c.second) for c in candidates}
-    for group in by_domain.values():
-        tokenized = [(d, _tokenize(d.choice)) for d in group]
-        for index, (left, left_tokens) in enumerate(tokenized):
-            if len(left_tokens) < 5:
-                continue
-            for right, right_tokens in tokenized[index + 1 :]:
-                if len(right_tokens) < 5:
-                    continue
-                overlap = left_tokens & right_tokens
-                union = left_tokens | right_tokens
-                if len(overlap) >= 5 and len(overlap) / len(union) >= 0.62:
-                    pair = (left.filename, right.filename)
-                    if pair not in seen_pairs:
-                        seen_pairs.add(pair)
-                        candidates.append(
-                            DuplicateCandidate(left.filename, right.filename, "high choice-token overlap")
-                        )
-    return candidates
-
-
 def _all_boards() -> dict[str, dict[str, list[kanban.Task]]]:
     return {project_id: kanban.list_all(project_id) for project_id in kanban.list_projects()}
 
@@ -142,8 +73,6 @@ def _render_index(
     all_decisions: list[decisions.Decision],
     all_patterns: list[patterns.Pattern],
     boards: dict[str, dict[str, list[kanban.Task]]],
-    validation_errors: dict[str, list[str]],
-    duplicate_candidates: list[DuplicateCandidate],
 ) -> str:
     current_project = project.current_project_id()
     domain_counts = Counter(d.domain for d in all_decisions)
@@ -157,8 +86,6 @@ def _render_index(
         f"- Active decisions: {len(all_decisions)}",
         f"- Patterns: {len(all_patterns)}",
         f"- Projects: {len(boards)}",
-        f"- Validation issue files: {len(validation_errors)}",
-        f"- Duplicate review candidates: {len(duplicate_candidates)}",
         "",
         "## Domain Summaries",
     ]
@@ -181,34 +108,19 @@ def _render_index(
     else:
         lines.append("(none)")
 
-    lines.extend(
-        [
-            "",
-            "## Review Queue",
-            "- [conflicts.md](conflicts.md) lists validation issues and duplicate candidates.",
-            "- Original decision and pattern files remain the source of truth.",
-            "",
-        ]
-    )
+    lines.append("")
     return "\n".join(lines)
 
 
 def _render_domain_summary(domain: str, items: list[decisions.Decision]) -> str:
     items = sorted(items, key=lambda d: (d.decided, d.slug), reverse=True)
-    keyword_counts = Counter()
-    for d in items:
-        keyword_counts.update(_tokenize(f"{d.slug} {d.choice}"))
-
     lines = [
         f"# {domain}",
         "",
         f"Active decisions: {len(items)}",
         "",
-        "## Common Signals",
+        "## Current Decisions",
     ]
-    signals = [token for token, _count in keyword_counts.most_common(12)]
-    lines.append(", ".join(signals) if signals else "(none)")
-    lines.extend(["", "## Current Decisions"])
 
     for d in items[:MAX_DECISIONS_PER_DOMAIN_SUMMARY]:
         decided = f" ({d.decided})" if d.decided else ""
@@ -253,37 +165,6 @@ def _render_project_summary(
     return "\n".join(lines)
 
 
-def _render_conflicts(
-    validation_errors: dict[str, list[str]],
-    duplicate_candidates: list[DuplicateCandidate],
-) -> str:
-    lines = [
-        "# TEL Review Queue",
-        "",
-        "This file is advisory. It points to items that may need human review; it does not change source records.",
-        "",
-        "## Validation Issues",
-    ]
-    if validation_errors:
-        for filename, issues in validation_errors.items():
-            lines.append(f"### {filename}")
-            for issue in issues:
-                lines.append(f"- {issue}")
-    else:
-        lines.append("(none detected)")
-
-    lines.extend(["", "## Duplicate Candidates"])
-    if duplicate_candidates:
-        for candidate in duplicate_candidates[:200]:
-            lines.append(f"- {candidate.first} <> {candidate.second}: {candidate.reason}")
-        if len(duplicate_candidates) > 200:
-            lines.append(f"- ... {len(duplicate_candidates) - 200} more candidates omitted")
-    else:
-        lines.append("(none detected)")
-    lines.append("")
-    return "\n".join(lines)
-
-
 def write_summaries(project_id: str | None = None) -> OrganizationReport:
     all_decisions = decisions.query(status="active")
     all_patterns = patterns.query()
@@ -295,16 +176,11 @@ def write_summaries(project_id: str | None = None) -> OrganizationReport:
     if requested_project not in boards:
         boards[requested_project] = kanban.list_all(requested_project)
 
-    validation_errors = decisions.validate_all()
-    duplicate_candidates = _find_duplicate_candidates(all_decisions)
-
     report = OrganizationReport(
         summary_dir=summaries_dir(),
         decision_count=len(all_decisions),
         pattern_count=len(all_patterns),
         project_count=len(boards),
-        validation_error_count=len(validation_errors),
-        duplicate_candidate_count=len(duplicate_candidates),
     )
 
     by_domain: dict[str, list[decisions.Decision]] = defaultdict(list)
@@ -321,13 +197,16 @@ def write_summaries(project_id: str | None = None) -> OrganizationReport:
         {f"{board_project_id}.md" for board_project_id in boards},
         report,
     )
+    obsolete_review = summaries_dir() / "conflicts.md"
+    if obsolete_review.exists():
+        obsolete_review.unlink()
+        report.removed_files.append(obsolete_review)
 
     _write(
         summaries_dir() / "index.md",
-        _render_index(all_decisions, all_patterns, boards, validation_errors, duplicate_candidates),
+        _render_index(all_decisions, all_patterns, boards),
         report,
     )
-    _write(summaries_dir() / "conflicts.md", _render_conflicts(validation_errors, duplicate_candidates), report)
 
     for domain, items in sorted(by_domain.items()):
         _write(_domain_summaries_dir() / f"{domain}.md", _render_domain_summary(domain, items), report)
@@ -340,12 +219,4 @@ def write_summaries(project_id: str | None = None) -> OrganizationReport:
             report,
         )
 
-    return report
-
-
-def organize(project_id: str | None = None) -> OrganizationReport:
-    from tel import context
-
-    report = write_summaries(project_id=project_id)
-    context.regenerate(project_id=project_id, refresh_summaries=False)
     return report

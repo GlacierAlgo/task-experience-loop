@@ -7,8 +7,9 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from tel import context, decisions, kanban, organize, patterns
+from tel import context, kanban, organize
 from tel.cli import cli
+from tests.support import write_decision, write_pattern
 
 
 class OrganizeTests(unittest.TestCase):
@@ -30,9 +31,9 @@ class OrganizeTests(unittest.TestCase):
             os.environ["TEL_PROJECT"] = self.previous_project
         self.tempdir.cleanup()
 
-    def test_organize_writes_index_domain_project_and_conflicts(self) -> None:
+    def test_summary_refresh_writes_navigation_without_a_second_review_queue(self) -> None:
         kanban.add("agent runtime")
-        decisions.record(
+        write_decision(
             domain="architecture",
             slug="agent-runtime-boundary",
             decision_point="Where should agent runtime state live?",
@@ -42,7 +43,7 @@ class OrganizeTests(unittest.TestCase):
             implications=["Frontend reads backend state through APIs."],
             projects=["alpha"],
         )
-        patterns.record(
+        write_pattern(
             slug="small-summary-first",
             situation="A memory pool grows beyond direct reading.",
             action="Generate small summaries before detailed lookup.",
@@ -50,13 +51,14 @@ class OrganizeTests(unittest.TestCase):
             domain="workflow",
         )
 
-        report = organize.organize()
+        report = organize.write_summaries()
+        context.regenerate(refresh_summaries=False)
 
         root = Path(self.tempdir.name)
         self.assertEqual(report.decision_count, 1)
         self.assertEqual(report.pattern_count, 1)
         self.assertTrue((root / "summaries" / "index.md").exists())
-        self.assertTrue((root / "summaries" / "conflicts.md").exists())
+        self.assertFalse((root / "summaries" / "conflicts.md").exists())
         self.assertTrue((root / "summaries" / "domains" / "architecture.md").exists())
         self.assertTrue((root / "summaries" / "projects" / "alpha.md").exists())
         project_text = (root / "summaries" / "projects" / "alpha.md").read_text()
@@ -69,7 +71,7 @@ class OrganizeTests(unittest.TestCase):
 
     def test_context_regeneration_keeps_no_active_task_context_compact(self) -> None:
         for index in range(20):
-            decisions.record(
+            write_decision(
                 domain="architecture",
                 slug=f"decision-{index}",
                 decision_point=f"Where should decision {index} live?",
@@ -86,7 +88,7 @@ class OrganizeTests(unittest.TestCase):
 
     def test_context_requires_multiple_distinct_relevance_hits(self) -> None:
         os.environ["TEL_PROJECT"] = "agent-server"
-        decisions.record(
+        write_decision(
             domain="architecture",
             slug="agent-runtime-boundary",
             decision_point="Where should the unrelated runtime live?",
@@ -95,7 +97,7 @@ class OrganizeTests(unittest.TestCase):
             constraints=["The backend owns execution."],
             implications=["The frontend reads an API."],
         )
-        decisions.record(
+        write_decision(
             domain="architecture",
             slug="agent-server-runtime-boundary",
             decision_point="Where should the agent server runtime live?",
@@ -117,13 +119,15 @@ class OrganizeTests(unittest.TestCase):
         root = Path(self.tempdir.name)
         stale_project = root / "summaries" / "projects" / "old-project.md"
         stale_domain = root / "summaries" / "domains" / "old-domain.md"
+        obsolete_review = root / "summaries" / "conflicts.md"
         stale_project.parent.mkdir(parents=True, exist_ok=True)
         stale_domain.parent.mkdir(parents=True, exist_ok=True)
         stale_project.write_text("# old project\n")
         stale_domain.write_text("# old domain\n")
+        obsolete_review.write_text("# obsolete duplicate review surface\n")
 
         kanban.add("agent runtime")
-        decisions.record(
+        write_decision(
             domain="architecture",
             slug="agent-runtime-boundary",
             decision_point="Where should agent runtime state live?",
@@ -133,15 +137,17 @@ class OrganizeTests(unittest.TestCase):
             implications=["Frontend reads backend state through APIs."],
         )
 
-        report = organize.organize()
+        report = organize.write_summaries()
 
         self.assertFalse(stale_project.exists())
         self.assertFalse(stale_domain.exists())
+        self.assertFalse(obsolete_review.exists())
         self.assertIn(stale_project, report.removed_files)
         self.assertIn(stale_domain, report.removed_files)
+        self.assertIn(obsolete_review, report.removed_files)
 
     def test_explicit_project_ownership_drives_summary_and_context_without_kanban(self) -> None:
-        decisions.record(
+        write_decision(
             domain="architecture",
             slug="butterfly-runtime",
             decision_point="Where does runtime state live?",
@@ -151,7 +157,7 @@ class OrganizeTests(unittest.TestCase):
             implications=["The browser reads server-owned state."],
             projects=["butterfly-effect"],
         )
-        decisions.record(
+        write_decision(
             domain="architecture",
             slug="unrelated-runtime",
             decision_point="Where does an unrelated runtime live?",
@@ -161,7 +167,7 @@ class OrganizeTests(unittest.TestCase):
             implications=["Keyword overlap does not assign a project."],
         )
 
-        organize.organize()
+        context.regenerate()
 
         project_summary = (
             Path(self.tempdir.name) / "summaries" / "projects" / "butterfly-effect.md"
@@ -174,7 +180,7 @@ class OrganizeTests(unittest.TestCase):
         )
 
     def test_project_summary_omits_completion_history(self) -> None:
-        decisions.record(
+        write_decision(
             domain="workflow",
             slug="live-board-only",
             decision_point="What belongs on the live task board?",
@@ -187,7 +193,7 @@ class OrganizeTests(unittest.TestCase):
         kanban.add("temporary task")
         kanban.complete("temporary task")
 
-        organize.organize()
+        context.regenerate()
 
         project_summary = (
             Path(self.tempdir.name) / "summaries" / "projects" / "alpha.md"
@@ -196,7 +202,7 @@ class OrganizeTests(unittest.TestCase):
         self.assertNotIn("Recent Completions", project_summary)
 
     def test_search_matches_decision_project_id(self) -> None:
-        decisions.record(
+        write_decision(
             domain="architecture",
             slug="runtime-boundary",
             decision_point="Where should runtime state live?",

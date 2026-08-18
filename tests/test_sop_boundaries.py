@@ -24,6 +24,17 @@ def skill_body(path: Path) -> str:
 
 
 class SopBoundaryTests(unittest.TestCase):
+    def test_requirement_challenger_is_optional_single_and_turn_bounded(self) -> None:
+        text = ACTION_NORM.read_text()
+        improvement = text.split("## Improvement ordering", 1)[1].split(
+            "## Action roles", 1
+        )[0]
+
+        self.assertIn("可按需创建一个只读 challenger subagent", improvement)
+        self.assertIn("最多激活 3 turns", improvement)
+        self.assertIn("不得嵌套派生或通过更换 agent 重置上限", improvement)
+        self.assertIn("主 agent 负责整合证据、最终解释", improvement)
+
     def test_shared_router_classifies_every_sop_exactly_once(self) -> None:
         text = ACTION_NORM.read_text()
         role_section = text.split("## Action roles", 1)[1].split(

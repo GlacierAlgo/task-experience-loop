@@ -128,29 +128,11 @@ def kanban_path(project_id: str | None = None) -> Path:
     return project.tel_dir() / "kanban.md"
 
 
-def legacy_kanban_path() -> Path:
-    return kanban_path()
-
-
 def _read_all_boards() -> dict[str, dict[str, list[Task]]]:
     path = kanban_path()
     if not path.exists():
         return {}
     return _parse(path.read_text())
-
-
-def _write_all_boards(boards: dict[str, dict[str, list[Task]]]) -> None:
-    """Write boards to disk. Used for bulk/admin operations only."""
-    path = kanban_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a+") as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        try:
-            f.seek(0)
-            f.truncate()
-            f.write(_render({n: b for n, b in boards.items() if _has_any_task(b)}))
-        finally:
-            fcntl.flock(f, fcntl.LOCK_UN)
 
 
 def _atomic_update(project_id: str | None, fn) -> dict[str, list[Task]]:
